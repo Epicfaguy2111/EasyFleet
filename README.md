@@ -65,4 +65,14 @@ The stats regarding the application
             ▪ Shipment eta 
             ▪ End Location
 
+# Core Data Models
 
+    Vehicles: id, make_model, year, vin, current_lat, current_lon, speed, baseline_fuel_consumption, status (active, maintenance, idle).
+
+    Telemetry & Sensors: id, vehicle_id, timestamp, fuel_level, engine_temp, harsh_braking_events, idle_duration_minutes.
+
+    Drivers: id, name, surname, license_number, employment_status, assigned_vehicle_id, safety_score.
+
+    Shipments & Routes: id, shipment_code, driver_id, vehicle_id, origin_coords, destination_coords, current_eta, route_geometry, status.
+
+    Alerts & Incidents: id, vehicle_id, driver_id, alert_type (fuel theft anomaly, high-risk zone entry, collision, maintenance warning), severity, resolved_status.
