@@ -29,6 +29,7 @@ class LegalDimensionalLimits:
     max_length_m: float
     max_width_m: float
     max_height_m: float
+    turning_radius_typical_m: float
 
     def check(self, length_m: float, width_m: float, height_m: float) -> dict:
         return {
@@ -47,18 +48,21 @@ LEGAL_LIMITS: dict[VehicleType, LegalDimensionalLimits] = {
         max_length_m=12.5,
         max_width_m=2.6,
         max_height_m=4.3,
+        turning_radius_typical_m=8.7
     ),
     VehicleType.ARTICULATED: LegalDimensionalLimits(
         vehicle_type=VehicleType.ARTICULATED,
         max_length_m=18.5,
         max_width_m=2.6,
         max_height_m=4.3,
+        turning_radius_typical_m=12.5
     ),
     VehicleType.OTHER_COMBINATION: LegalDimensionalLimits(
         vehicle_type=VehicleType.OTHER_COMBINATION,
         max_length_m=22.0,
         max_width_m=2.6,
         max_height_m=4.3,
+        turning_radius_typical_m=16.5
     ),
 }
 @dataclass
@@ -177,6 +181,7 @@ class Truck:
             ("Engine Power",    f"{self.engine_power_kw:,.0f} kW"),
             ("Fuel Tank",       f"{self.fuel_tank_capacity_l:,.0f} L"),
             ("Axles",           str(self.axle_count)),
+            ("Turning Radius",  f"~{limits.turning_radius_typical_m:.1f} m (typical, not a legal limit)"),
             ("Vehicle Type",    self.vehicle_type.value.replace("_", " ").title()),
             ("Length",          f"{self.length_m:.1f} m (limit {limits.max_length_m:.1f} m)"),
             ("Width",           f"{self.width_m:.1f} m (limit {limits.max_width_m:.1f} m)"),
