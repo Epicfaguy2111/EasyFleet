@@ -29,16 +29,32 @@ let selectedProfile = null;
 // LOAD PROFILES
 // ===============================
 
-function loadProfiles() {
-
-    const savedProfiles =
-        localStorage.getItem("truckProfiles");
-
-    if (savedProfiles) {
-
-        truckProfiles =
-            JSON.parse(savedProfiles);
-
+async function loadProfiles() {
+    try {
+        const response = await fetch("http://127.0.0.1:8000/trucks/");
+        if (response.ok) {
+            const data = await response.json();
+            truckProfiles = data.map(truck => ({
+                id: truck.id,
+                name: truck.name,
+                registration: truck.registration,
+                weight: truck.weight,
+                height: truck.height,
+                length: truck.length,
+                fuel: truck.fuel,
+                driver: {
+                    name: truck.driver?.name || "",
+                    licence: truck.driver?.licence || "",
+                    phone: truck.driver?.phone || ""
+                }
+            }));
+        }
+    } catch (err) {
+        console.warn("Could not load from API, falling back to local cache:", err);
+        const savedProfiles = localStorage.getItem("truckProfiles");
+        if (savedProfiles) {
+            truckProfiles = JSON.parse(savedProfiles);
+        }
     }
 
     updateProfileDropdown();
@@ -230,143 +246,85 @@ function closeModal() {
 
 document
     .getElementById("saveProfileButton")
-    .addEventListener(
-        "click",
-        saveProfile
-    );
+    .addEventListener("click", saveProfile);
 
-
-function saveProfile() {
-
-    const name =
-        document
-            .getElementById("newTruckName")
-            .value.trim();
-
-
-    const registration =
-        document
-            .getElementById("newRegistration")
-            .value.trim();
-
-
-    const weight =
-        document
-            .getElementById("newWeight")
-            .value;
-
-
-    const height =
-        document
-            .getElementById("newHeight")
-            .value;
-
-
-    const length =
-        document
-            .getElementById("newLength")
-            .value;
-
-
-    const fuel =
-        document
-            .getElementById("newFuel")
-            .value;
-
-
-    const driverName =
-        document
-            .getElementById("newDriverName")
-            .value.trim();
-
-
-    const driverLicence =
-        document
-            .getElementById("newDriverLicence")
-            .value.trim();
-
-
-    const driverPhone =
-        document
-            .getElementById("newDriverPhone")
-            .value.trim();
-
+async function saveProfile() {
+    const name = document.getElementById("newTruckName").value.trim();
+    const registration = document.getElementById("newRegistration").value.trim();
+    const weight = document.getElementById("newWeight").value;
+    const height = document.getElementById("newHeight").value;
+    const length = document.getElementById("newLength").value;
+    const fuel = document.getElementById("newFuel").value;
+    const driverName = document.getElementById("newDriverName").value.trim();
+    const driverLicence = document.getElementById("newDriverLicence").value.trim();
+    const driverPhone = document.getElementById("newDriverPhone").value.trim();
 
     // Basic validation
-
-    if (
-        !name ||
-        !registration ||
-        !weight ||
-        !height ||
-        !length ||
-        !fuel
-    ) {
-
-        alert(
-            "Please complete all truck information."
-        );
-
+    if (!name || !registration || !weight || !height || !length || !fuel) {
+        alert("Please complete all truck information.");
         return;
     }
 
-
-    const profile = {
-
-        id: Date.now(),
-
+    const payload = {
         name: name,
-
         registration: registration,
-
         weight: Number(weight),
-
         height: Number(height),
-
         length: Number(length),
-
         fuel: Number(fuel),
-
         driver: {
-
             name: driverName,
-
             licence: driverLicence,
-
             phone: driverPhone
-
         }
     };
 
+    try {
+        const response = await fetch("http://127.0.0.1:8000/trucks/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
 
-    truckProfiles.push(profile);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || "Failed to save truck profile.");
+        }
 
+        const savedTruck = await response.json();
 
-    localStorage.setItem(
-        "truckProfiles",
-        JSON.stringify(truckProfiles)
-    );
+        // Standardize format for local UI state
+        const profile = {
+            id: savedTruck.id,
+            name: savedTruck.name,
+            registration: savedTruck.registration,
+            weight: savedTruck.weight,
+            height: savedTruck.height,
+            length: savedTruck.length,
+            fuel: savedTruck.fuel,
+            driver: {
+                name: savedTruck.driver?.name || driverName,
+                licence: savedTruck.driver?.licence || driverLicence,
+                phone: savedTruck.driver?.phone || driverPhone
+            }
+        };
 
+        truckProfiles.push(profile);
+        updateProfileDropdown();
 
-    updateProfileDropdown();
+        // Select the newly added truck
+        document.getElementById("truckProfile").value = profile.id;
+        selectedProfile = profile;
+        displayProfile(profile);
 
-
-    // Automatically select new profile
-
-    document
-        .getElementById("truckProfile")
-        .value = profile.id;
-
-
-    selectedProfile = profile;
-
-    displayProfile(profile);
-
-
-    closeModal();
-
-
-    clearProfileForm();
+        closeModal();
+        clearProfileForm();
+    } catch (err) {
+        console.error("Error saving truck:", err);
+        alert(`Error: ${err.message}`);
+    }
 }
 
 
