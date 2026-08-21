@@ -1,0 +1,251 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f4f6;
+}
+
+
+/* HEADER */
+
+header {
+    height: 60px;
+
+    background: #1f2937;
+    color: white;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 22px;
+}
+
+
+/* APPLICATION */
+
+.application {
+    display: flex;
+
+    height: calc(100vh - 60px);
+}
+
+
+/* SIDEBAR */
+
+.sidebar {
+    width: 380px;
+
+    padding: 20px;
+
+    background: #f3f4f6;
+
+    overflow-y: auto;
+}
+
+
+/* PANELS */
+
+.panel {
+    background: white;
+
+    padding: 15px;
+
+    margin-bottom: 15px;
+
+    border-radius: 8px;
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.panel h3 {
+    margin-top: 0;
+}
+
+
+/* FORM */
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+
+    padding: 10px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 5px;
+
+    font-size: 14px;
+
+    background: white;
+}
+
+
+/* TWO COLUMN FORM */
+
+.form-row {
+    display: flex;
+
+    gap: 10px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+
+/* BUTTONS */
+
+button {
+    border: none;
+
+    border-radius: 5px;
+
+    padding: 10px 14px;
+
+    font-size: 14px;
+
+    cursor: pointer;
+}
+
+.primary-button {
+    width: 100%;
+
+    background: #2563eb;
+
+    color: white;
+
+    font-weight: bold;
+}
+
+.primary-button:hover {
+    background: #1d4ed8;
+}
+
+.secondary-button {
+    width: 100%;
+
+    background: #e5e7eb;
+
+    color: #1f2937;
+}
+
+.secondary-button:hover {
+    background: #d1d5db;
+}
+
+
+/* TRUCK INFORMATION */
+
+.info-row {
+    display: flex;
+
+    justify-content: space-between;
+
+    padding: 7px 0;
+
+    border-bottom: 1px solid #eee;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row span {
+    color: #6b7280;
+}
+
+
+/* MAP */
+
+#map {
+    flex: 1;
+
+    height: 100%;
+}
+
+
+/* MODAL */
+
+.modal {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.5);
+
+    justify-content: center;
+    align-items: center;
+
+    z-index: 1000;
+}
+
+.modal-content {
+    width: 500px;
+
+    max-width: 90%;
+
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    background: white;
+
+    border-radius: 10px;
+
+    padding: 25px;
+}
+
+.modal-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin-top: 0;
+}
+
+.close-button {
+    background: transparent;
+
+    font-size: 28px;
+
+    padding: 0;
+
+    color: #555;
+}
+
+.modal-buttons {
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 20px;
+}
+
+.modal-buttons button {
+    flex: 1;
+}

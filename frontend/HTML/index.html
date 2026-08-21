@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>EasyFleet</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+        <link rel="stylesheet" href="css/style.css">
+
+    </head>
+    <body>
+        <header>
+            <h1>EasyFleet</h1>
+        </header>
+
+        <div class="application">
+            <aside class="sidebar">
+
+                <h2>Plan Route</h2>
+
+
+                <!-- TRUCK PROFILE -->
+                <section class="panel">
+
+                    <h3>Truck Profile</h3>
+
+                    <div class="form-group">
+
+                        <label for="truckProfile">Select Truck</label>
+
+                        <select id="truckProfile">
+
+                            <option value="">
+                                -- Select Truck Profile --
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <button type="button" id="createProfileButton" class="secondary-button">
+                        + Create New Profile
+                    </button>
+
+                </section>
+
+
+                <!-- TRUCK INFORMATION -->
+                <section class="panel" id="truckInfoPanel" style="display: none;">
+
+                    <h3>Truck Information</h3>
+
+                    <div class="info-row">
+                        <span>Truck:</span>
+                        <strong id="truckName">--</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Registration:</span>
+                        <strong id="registration">--</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Weight:</span>
+                        <strong id="truckWeight">--</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Height:</span>
+                        <strong id="truckHeight">--</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Length:</span>
+                        <strong id="truckLength">--</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Fuel Capacity:</span>
+                        <strong id="truckFuel">--</strong>
+                    </div>
+
+                </section>
+
+
+                <!-- DRIVER INFORMATION -->
+                <section class="panel">
+
+                    <h3>Driver Information</h3>
+
+                    <div class="form-group">
+
+                        <label for="driverName">
+                            Driver Name
+                        </label>
+
+                        <input type="text" id="driverName" placeholder="Enter driver's name">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="driverLicence">Licence Number</label>
+
+                        <input type="text" id="driverLicence" placeholder="Enter licence number">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="driverHours">Driving Hours Available</label>
+
+                        <input type="number" id="driverHours" min="0" max="24" step="0.5" value="9">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="driverPhone">Contact Number</label>
+
+                        <input type="tel" id="driverPhone" placeholder="Enter contact number">
+
+                    </div>
+
+                </section>
+
+
+                <!-- ROUTE INFORMATION -->
+                <section class="panel">
+
+                    <h3>Route</h3>
+
+                    <div class="form-group">
+
+                        <label for="start">
+                            Starting Location
+                        </label>
+
+                        <input type="text" id="start" placeholder="Enter starting location">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="destination">
+                            Destination
+                        </label>
+
+                        <input type="text" id="destination" placeholder="Enter destination">
+
+                    </div>
+
+
+                    <button id="routeButton" class="primary-button">Calculate Route</button>
+
+                </section>
+
+
+                <!-- ROUTE RESULTS -->
+                <section id="routeInfo" class="panel route-info">
+
+                    <h3>Route Information</h3>
+
+                    <p>
+                        Distance:
+                        <span id="distance">--</span>
+                    </p>
+
+                    <p>
+                        Estimated Time:
+                        <span id="duration">--</span>
+                    </p>
+
+                    <p>
+                        Fuel Required:
+                        <span id="fuelRequired">--</span>
+                    </p>
+
+                </section>
+
+            </aside>
+            <main id="map"></main>
+        </div>
+        <!-- CREATE PROFILE MODAL -->
+
+        <div id="profileModal" class="modal">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h2>Create Truck Profile</h2>
+
+                    <button
+                        type="button"
+                        id="closeModalButton"
+                        class="close-button"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+
+                <!-- TRUCK INFORMATION -->
+
+                <h3>Truck Information</h3>
+
+                <div class="form-group">
+
+                    <label for="newTruckName">
+                        Truck Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="newTruckName"
+                        placeholder="e.g. Truck 01"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="newRegistration">
+                        Registration Number
+                    </label>
+
+                    <input
+                        type="text"
+                        id="newRegistration"
+                        placeholder="e.g. CA 123456"
+                    >
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="newWeight">
+                            Weight (tons)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="newWeight"
+                            min="0"
+                            step="0.1"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="newHeight">
+                            Height (m)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="newHeight"
+                            min="0"
+                            step="0.1"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="newLength">
+                            Length (m)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="newLength"
+                            min="0"
+                            step="0.1"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="newFuel">
+                            Fuel Capacity (L)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="newFuel"
+                            min="0"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- DRIVER INFORMATION -->
+
+                <h3>Default Driver</h3>
+
+                <div class="form-group">
+
+                    <label for="newDriverName">
+                        Driver Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="newDriverName"
+                        placeholder="Enter driver's name"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="newDriverLicence">
+                        Licence Number
+                    </label>
+
+                    <input
+                        type="text"
+                        id="newDriverLicence"
+                        placeholder="Enter licence number"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="newDriverPhone">
+                        Contact Number
+                    </label>
+
+                    <input
+                        type="tel"
+                        id="newDriverPhone"
+                        placeholder="Enter contact number"
+                    >
+
+                </div>
+
+
+                <!-- BUTTONS -->
+
+                <div class="modal-buttons">
+
+                    <button
+                        type="button"
+                        id="cancelProfileButton"
+                        class="secondary-button"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="button"
+                        id="saveProfileButton"
+                        class="primary-button"
+                    >
+                        Save Profile
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script src="js/app.js"></script>
+
+        
+    </body>
+</html>
