@@ -1,54 +1,46 @@
 // ===============================
-// MAP
+// MAP SETUP
 // ===============================
 
-const map = L.map("map").setView(
-    [-33.9249, 18.4241],
-    10
-);
+const map = L.map("map").setView([-33.9249, 18.4241], 10);
 
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors"
+}).addTo(map);
 
-L.tileLayer(
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    {
-        attribution: "&copy; OpenStreetMap contributors"
-    }
-).addTo(map);
-
+let routeLayerGroup = L.layerGroup().addTo(map);
 
 // ===============================
-// PROFILE DATA
+// PROFILE STATE
 // ===============================
 
 let truckProfiles = [];
-
 let selectedProfile = null;
 
 // ===============================
-// LEGAL DIMENSIONAL LIMITS
+// DYNAMIC LEGAL LIMITS UI
 // ===============================
 
-const legalLimits = {
-
-    single_rigid: {
-        length: 12.5,
-        width: 2.6,
-        height: 4.3
-    },
-
-    articulated: {
-        length: 18.5,
-        width: 2.6,
-        height: 4.3
-    },
-
-    other_combination: {
-        length: 22.0,
-        width: 2.6,
-        height: 4.3
-    }
-
-};
+const vehicleTypeSelect = document.getElementById("newVehicleType");
+if (vehicleTypeSelect) {
+    vehicleTypeSelect.addEventListener("change", function () {
+        const limitText = document.getElementById("dimensionLimitText");
+        const lengthLimit = document.getElementById("lengthLimit");
+        if (this.value === "single_rigid") {
+            limitText.textContent = "Single Rigid max length: 12.5m, Width: 2.6m, Height: 4.3m";
+            lengthLimit.textContent = "Maximum: 12.5 m";
+        } else if (this.value === "articulated") {
+            limitText.textContent = "Articulated max length: 18.5m, Width: 2.6m, Height: 4.3m";
+            lengthLimit.textContent = "Maximum: 18.5 m";
+        } else if (this.value === "other_combination") {
+            limitText.textContent = "Combination max length: 22.0m, Width: 2.6m, Height: 4.3m";
+            lengthLimit.textContent = "Maximum: 22.0 m";
+        } else {
+            limitText.textContent = "Select a vehicle type to view the applicable limits.";
+            lengthLimit.textContent = "Select vehicle type first.";
+        }
+    });
+}
 
 // ===============================
 // LOAD PROFILES
@@ -58,21 +50,7 @@ async function loadProfiles() {
     try {
         const response = await fetch("http://127.0.0.1:8000/trucks/");
         if (response.ok) {
-            const data = await response.json();
-            truckProfiles = data.map(truck => ({
-                id: truck.id,
-                name: truck.name,
-                registration: truck.registration,
-                weight: truck.weight,
-                height: truck.height,
-                length: truck.length,
-                fuel: truck.fuel,
-                driver: {
-                    name: truck.driver?.name || "",
-                    licence: truck.driver?.licence || "",
-                    phone: truck.driver?.phone || ""
-                }
-            }));
+            truckProfiles = await response.json();
         }
     } catch (err) {
         console.warn("Could not load from API, falling back to local cache:", err);
@@ -85,606 +63,141 @@ async function loadProfiles() {
     updateProfileDropdown();
 }
 
-
 // ===============================
 // UPDATE DROPDOWN
 // ===============================
 
 function updateProfileDropdown() {
-
-    const dropdown =
-        document.getElementById("truckProfile");
-
-
-    dropdown.innerHTML = `
-        <option value="">
-            -- Select Truck Profile --
-        </option>
-    `;
-
+    const dropdown = document.getElementById("truckProfile");
+    dropdown.innerHTML = `<option value="">-- Select Truck Profile --</option>`;
 
     truckProfiles.forEach(profile => {
-
-        const option =
-            document.createElement("option");
-
+        const option = document.createElement("option");
         option.value = profile.id;
-
-        option.textContent =
-            `${profile.name} - ${profile.registration}`;
-
+        option.textContent = `${profile.fleet_number || profile.name} - ${profile.registration}`;
         dropdown.appendChild(option);
     });
 }
-
 
 // ===============================
 // PROFILE SELECTED
 // ===============================
 
-document
-    .getElementById("truckProfile")
-    .addEventListener(
-        "change",
-        function () {
+document.getElementById("truckProfile").addEventListener("change", function () {
+    const profileId = this.value;
 
-            const profileId =
-                this.value;
+    if (!profileId) {
+        selectedProfile = null;
+        document.getElementById("truckInfoPanel").style.display = "none";
+        return;
+    }
 
-
-            if (!profileId) {
-
-                selectedProfile = null;
-
-                document
-                    .getElementById("truckInfoPanel")
-                    .style.display = "none";
-
-                return;
-            }
-
-
-            selectedProfile =
-                truckProfiles.find(
-                    profile =>
-                        profile.id == profileId
-                );
-
-
-            displayProfile(
-                selectedProfile
-            );
-        }
-    );
-
+    selectedProfile = truckProfiles.find(profile => profile.id == profileId);
+    displayProfile(selectedProfile);
+});
 
 // ===============================
 // DISPLAY PROFILE
 // ===============================
 
 function displayProfile(profile) {
+    if (!profile) return;
+    document.getElementById("truckInfoPanel").style.display = "block";
 
-    document
-        .getElementById("truckInfoPanel")
-        .style.display = "block";
-
-
-    setText(
-        "truckName",
-        profile.name
-    );
-
-
-    setText(
-        "truckFleetNumber",
-        profile.fleetNumber || "--"
-    );
-
-
-    setText(
-        "truckVin",
-        profile.vin || "--"
-    );
-
-
-    setText(
-        "truckMake",
-        profile.make || "--"
-    );
-
-
-    setText(
-        "truckModel",
-        profile.model || "--"
-    );
-
-
-    setText(
-        "truckYear",
-        profile.year || "--"
-    );
-
-
-    setText(
-        "truckFuelType",
-        formatEnum(profile.fuelType)
-    );
-
-
-    setText(
-        "truckStatus",
-        formatEnum(profile.status)
-    );
-
-
-    setText(
-        "truckWeight",
-        formatNumber(profile.grossVehicleWeightKg) + " kg"
-    );
-
-
-    setText(
-        "truckPayload",
-        formatNumber(profile.payloadCapacityKg) + " kg"
-    );
-
-
-    setText(
-        "truckEnginePower",
-        formatNumber(profile.enginePowerKw) + " kW"
-    );
-
-
-    setText(
-        "truckFuel",
-        formatNumber(profile.fuelTankCapacityL) + " L"
-    );
-
-
-    setText(
-        "truckAxles",
-        profile.axleCount || "--"
-    );
-
-
-    setText(
-        "truckVehicleType",
-        formatEnum(profile.vehicleType)
-    );
-
-
-    setText(
-        "truckLength",
-        `${profile.length} m`
-    );
-
-
-    setText(
-        "truckWidth",
-        `${profile.width} m`
-    );
-
-
-    setText(
-        "truckHeight",
-        `${profile.height} m`
-    );
-
-
-    setText(
-        "truckOdometer",
-        formatNumber(profile.odometerKm) + " km"
-    );
-
-
-    setText(
-        "truckNextService",
-        profile.nextServiceDueKm !== null &&
-        profile.nextServiceDueKm !== undefined
-            ? formatNumber(profile.nextServiceDueKm) + " km"
-            : "Not set"
-    );
-
-
+    document.getElementById("truckName").textContent = profile.name || "--";
+    document.getElementById("truckFleetNumber").textContent = profile.fleet_number || "--";
+    document.getElementById("truckVin").textContent = profile.vin || "--";
+    document.getElementById("truckMake").textContent = profile.make || "--";
+    document.getElementById("truckModel").textContent = profile.model || "--";
+    document.getElementById("truckYear").textContent = profile.year || "--";
+    document.getElementById("truckFuelType").textContent = (profile.fuel_type || "--").toUpperCase();
+    document.getElementById("truckStatus").textContent = (profile.status || "--").replace("_", " ").toUpperCase();
+    document.getElementById("truckWeight").textContent = `${Number(profile.weight || 0).toLocaleString()} kg`;
+    document.getElementById("truckPayload").textContent = `${Number(profile.payload || 0).toLocaleString()} kg`;
+    document.getElementById("truckEnginePower").textContent = `${profile.engine_power || 0} kW`;
+    document.getElementById("truckFuel").textContent = `${profile.fuel || 0} L`;
+    document.getElementById("truckAxles").textContent = profile.axles || "--";
+    document.getElementById("truckVehicleType").textContent = (profile.vehicle_type || "--").replace("_", " ");
+    document.getElementById("truckLength").textContent = `${profile.length || 0} m`;
+    document.getElementById("truckWidth").textContent = `${profile.width || 0} m`;
+    document.getElementById("truckHeight").textContent = `${profile.height || 0} m`;
+    document.getElementById("truckOdometer").textContent = `${Number(profile.odometer || 0).toLocaleString()} km`;
+    document.getElementById("truckNextService").textContent = profile.next_service_km ? `${Number(profile.next_service_km).toLocaleString()} km` : "--";
 }
-
-
-// ===============================
-// HELPER FUNCTIONS
-// ===============================
-
-function setText(id, value) {
-
-    const element =
-        document.getElementById(id);
-
-    if (element) {
-
-        element.textContent =
-            value ?? "--";
-
-    }
-
-}
-
-
-function formatNumber(value) {
-
-    if (
-        value === null ||
-        value === undefined ||
-        value === ""
-    ) {
-
-        return "--";
-
-    }
-
-    return Number(value).toLocaleString();
-
-}
-
-
-function formatEnum(value) {
-
-    if (!value) {
-
-        return "--";
-
-    }
-
-    return value
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, char =>
-            char.toUpperCase()
-        );
-}
-
 
 // ===============================
 // CREATE PROFILE MODAL
 // ===============================
 
-const modal =
-    document.getElementById("profileModal");
+const modal = document.getElementById("profileModal");
 
-
-document
-    .getElementById("createProfileButton")
-    .addEventListener(
-        "click",
-        function () {
-
-            modal.style.display = "flex";
-
-            updateDimensionLimits();
-
-            document
-                .getElementById("newTruckName")
-                .focus();
-        }
-    );
-
-
-document
-    .getElementById("closeModalButton")
-    .addEventListener(
-        "click",
-        closeModal
-    );
-
-
-document
-    .getElementById("cancelProfileButton")
-    .addEventListener(
-        "click",
-        closeModal
-    );
-
-
-function closeModal() {
-
-    modal.style.display = "none";
-}
-
-
-// Close modal when clicking outside it
-
-modal.addEventListener(
-    "click",
-    function (event) {
-
-        if (event.target === modal) {
-
-            closeModal();
-
-        }
-
-    }
-);
-
-
-// ===============================
-// VEHICLE TYPE / DIMENSIONS
-// ===============================
-
-document
-    .getElementById("newVehicleType")
-    .addEventListener(
-        "change",
-        updateDimensionLimits
-    );
-
-
-function updateDimensionLimits() {
-
-    const vehicleType =
-        document.getElementById("newVehicleType").value;
-
-
-    const lengthInput =
-        document.getElementById("newLength");
-
-
-    const widthInput =
-        document.getElementById("newWidth");
-
-
-    const heightInput =
-        document.getElementById("newHeight");
-
-
-    const limitText =
-        document.getElementById("dimensionLimitText");
-
-
-    const lengthLimit =
-        document.getElementById("lengthLimit");
-
-
-    const widthLimit =
-        document.getElementById("widthLimit");
-
-
-    const heightLimit =
-        document.getElementById("heightLimit");
-
-
-    if (!legalLimits[vehicleType]) {
-
-        lengthInput.max = "22";
-        widthInput.max = "2.6";
-        heightInput.max = "4.3";
-
-        limitText.textContent =
-            "Select a vehicle type to view the applicable limits.";
-
-        lengthLimit.textContent =
-            "Select vehicle type first.";
-
-        widthLimit.textContent =
-            "Maximum: 2.6 m";
-
-        heightLimit.textContent =
-            "Maximum: 4.3 m";
-
-        return;
-    }
-
-
-    const limits =
-        legalLimits[vehicleType];
-
-
-    lengthInput.max =
-        limits.length;
-
-
-    widthInput.max =
-        limits.width;
-
-
-    heightInput.max =
-        limits.height;
-
-
-    limitText.textContent =
-        `Maximum dimensions: ` +
-        `${limits.length.toFixed(1)} m long × ` +
-        `${limits.width.toFixed(1)} m wide × ` +
-        `${limits.height.toFixed(1)} m high.`;
-
-
-    lengthLimit.textContent =
-        `Maximum: ${limits.length.toFixed(1)} m`;
-
-
-    widthLimit.textContent =
-        `Maximum: ${limits.width.toFixed(1)} m`;
-
-
-    heightLimit.textContent =
-        `Maximum: ${limits.height.toFixed(1)} m`;
-
-
-    validateDimensions();
-}
-
-
-// ===============================
-// DIMENSION VALIDATION
-// ===============================
-
-[
-    "newLength",
-    "newWidth",
-    "newHeight"
-].forEach(id => {
-
-    document
-        .getElementById(id)
-        .addEventListener(
-            "input",
-            validateDimensions
-        );
-
+document.getElementById("createProfileButton").addEventListener("click", () => {
+    modal.style.display = "flex";
 });
 
+document.getElementById("closeModalButton").addEventListener("click", closeModal);
+document.getElementById("cancelProfileButton").addEventListener("click", closeModal);
 
-function validateDimensions() {
-
-    const vehicleType =
-        document.getElementById("newVehicleType").value;
-
-
-    if (!legalLimits[vehicleType]) {
-
-        return false;
-
-    }
-
-
-    const limits =
-        legalLimits[vehicleType];
-
-
-    const length =
-        Number(
-            document.getElementById("newLength").value
-        );
-
-
-    const width =
-        Number(
-            document.getElementById("newWidth").value
-        );
-
-
-    const height =
-        Number(
-            document.getElementById("newHeight").value
-        );
-
-
-    const lengthInput =
-        document.getElementById("newLength");
-
-
-    const widthInput =
-        document.getElementById("newWidth");
-
-
-    const heightInput =
-        document.getElementById("newHeight");
-
-
-    lengthInput.setCustomValidity(
-        length > limits.length
-            ? `Maximum length is ${limits.length} m.`
-            : ""
-    );
-
-
-    widthInput.setCustomValidity(
-        width > limits.width
-            ? `Maximum width is ${limits.width} m.`
-            : ""
-    );
-
-
-    heightInput.setCustomValidity(
-        height > limits.height
-            ? `Maximum height is ${limits.height} m.`
-            : ""
-    );
-
-
-    return (
-        length <= limits.length &&
-        width <= limits.width &&
-        height <= limits.height
-    );
+function closeModal() {
+    modal.style.display = "none";
 }
-
 
 // ===============================
 // SAVE PROFILE
 // ===============================
 
-document
-    .getElementById("saveProfileButton")
-    .addEventListener("click", saveProfile);
+document.getElementById("saveProfileButton").addEventListener("click", saveProfile);
 
 async function saveProfile() {
-    const name = document.getElementById("newTruckName").value.trim();
-    const registration = document.getElementById("newRegistration").value.trim();
-    const weight = document.getElementById("newWeight").value;
-    const height = document.getElementById("newHeight").value;
-    const length = document.getElementById("newLength").value;
-    const fuel = document.getElementById("newFuel").value;
-    const driverName = document.getElementById("newDriverName").value.trim();
-    const driverLicence = document.getElementById("newDriverLicence").value.trim();
-    const driverPhone = document.getElementById("newDriverPhone").value.trim();
+    const payload = {
+        name: document.getElementById("newTruckName").value.trim(),
+        fleet_number: document.getElementById("newFleetNumber").value.trim(),
+        registration: document.getElementById("newRegistration").value.trim(),
+        vin: document.getElementById("newVin").value.trim(),
+        make: document.getElementById("newMake").value.trim(),
+        model: document.getElementById("newModel").value.trim(),
+        year: Number(document.getElementById("newYear").value),
+        fuel_type: document.getElementById("newFuelType").value,
+        vehicle_type: document.getElementById("newVehicleType").value,
+        axles: Number(document.getElementById("newAxleCount").value),
+        engine_power: Number(document.getElementById("newEnginePower").value),
+        weight: Number(document.getElementById("newWeight").value),
+        payload: Number(document.getElementById("newPayload").value),
+        fuel: Number(document.getElementById("newFuel").value),
+        length: Number(document.getElementById("newLength").value),
+        width: Number(document.getElementById("newWidth").value),
+        height: Number(document.getElementById("newHeight").value),
+        odometer: Number(document.getElementById("newOdometer").value),
+        status: document.getElementById("newStatus").value,
+        last_service_date: document.getElementById("newLastService").value || null,
+        next_service_km: document.getElementById("newNextService").value ? Number(document.getElementById("newNextService").value) : null
+    };
 
-    // Basic validation
-    if (!name || !registration || !weight || !height || !length || !fuel) {
-        alert("Please complete all truck information.");
+    if (!payload.name || !payload.vin || payload.vin.length !== 17 || !payload.registration) {
+        alert("Please ensure all required fields are filled correctly (VIN must be exactly 17 characters).");
         return;
     }
-
-    const payload = {
-        name: name,
-        registration: registration,
-        weight: Number(weight),
-        height: Number(height),
-        length: Number(length),
-        fuel: Number(fuel),
-        driver: {
-            name: driverName,
-            licence: driverLicence,
-            phone: driverPhone
-        }
-    };
 
     try {
         const response = await fetch("http://127.0.0.1:8000/trucks/", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || "Failed to save truck profile.");
+            const errData = await response.json();
+            throw new Error(errData.detail || "Failed to save truck profile");
         }
 
         const savedTruck = await response.json();
-
-        // Standardize format for local UI state
-        const profile = {
-            id: savedTruck.id,
-            name: savedTruck.name,
-            registration: savedTruck.registration,
-            weight: savedTruck.weight,
-            height: savedTruck.height,
-            length: savedTruck.length,
-            fuel: savedTruck.fuel,
-            driver: {
-                name: savedTruck.driver?.name || driverName,
-                licence: savedTruck.driver?.licence || driverLicence,
-                phone: savedTruck.driver?.phone || driverPhone
-            }
-        };
-
-        truckProfiles.push(profile);
+        truckProfiles.push(savedTruck);
+        localStorage.setItem("truckProfiles", JSON.stringify(truckProfiles));
         updateProfileDropdown();
 
-        // Select the newly added truck
-        document.getElementById("truckProfile").value = profile.id;
-        selectedProfile = profile;
-        displayProfile(profile);
+        document.getElementById("truckProfile").value = savedTruck.id;
+        selectedProfile = savedTruck;
+        displayProfile(savedTruck);
 
         closeModal();
         clearProfileForm();
@@ -694,284 +207,109 @@ async function saveProfile() {
     }
 }
 
-
 // ===============================
 // CLEAR PROFILE FORM
 // ===============================
 
 function clearProfileForm() {
-
-    const fields = [
-
-        "newTruckName",
-        "newFleetNumber",
-        "newRegistration",
-        "newVin",
-        "newMake",
-        "newModel",
-        "newYear",
-        "newWeight",
-        "newPayload",
-        "newEnginePower",
-        "newFuel",
-        "newAxleCount",
-        "newLength",
-        "newWidth",
-        "newHeight",
-        "newOdometer",
-        "newLastService",
-        "newNextService",
-        "newDriverName",
-        "newDriverLicence",
-        "newDriverPhone",
-        "newNotes"
-
-    ];
-
-
-    fields.forEach(id => {
-
-        const element =
-            document.getElementById(id);
-
-        if (element) {
-
-            element.value = "";
-
-        }
-
-    });
-
-
-    document
-        .getElementById("newStatus")
-        .value = "active";
-
-
-    document
-        .getElementById("newFuelType")
-        .value = "";
-
-
-    document
-        .getElementById("newVehicleType")
-        .value = "";
-
-
-    document
-        .getElementById("newAxleCount")
-        .value = "2";
-
-
-    document
-        .getElementById("newVin")
-        .setCustomValidity("");
-
-
-    [
-        "newLength",
-        "newWidth",
-        "newHeight"
-    ].forEach(id => {
-
-        document
-            .getElementById(id)
-            .setCustomValidity("");
-
-    });
-
-
-    updateDimensionLimits();
+    document.getElementById("newTruckName").value = "";
+    document.getElementById("newFleetNumber").value = "";
+    document.getElementById("newRegistration").value = "";
+    document.getElementById("newVin").value = "";
+    document.getElementById("newMake").value = "";
+    document.getElementById("newModel").value = "";
+    document.getElementById("newYear").value = "";
+    document.getElementById("newFuelType").value = "";
+    document.getElementById("newVehicleType").value = "";
+    document.getElementById("newAxleCount").value = "2";
+    document.getElementById("newEnginePower").value = "";
+    document.getElementById("newWeight").value = "";
+    document.getElementById("newPayload").value = "";
+    document.getElementById("newFuel").value = "";
+    document.getElementById("newLength").value = "";
+    document.getElementById("newWidth").value = "";
+    document.getElementById("newHeight").value = "";
+    document.getElementById("newOdometer").value = "";
+    document.getElementById("newStatus").value = "active";
+    document.getElementById("newLastService").value = "";
+    document.getElementById("newNextService").value = "";
 }
-
-
 
 // ===============================
 // CALCULATE ROUTE
 // ===============================
 
-document
-    .getElementById("routeButton")
-    .addEventListener(
-        "click",
-        calculateRoute
-    );
-
+document.getElementById("routeButton").addEventListener("click", calculateRoute);
 
 async function calculateRoute() {
-
-    const start =
-        document
-            .getElementById("start")
-            .value.trim();
-
-
-    const destination =
-        document
-            .getElementById("destination")
-            .value.trim();
-
-
-    const driverName =
-        document
-            .getElementById("driverName")
-            .value.trim();
-
+    const start = document.getElementById("start").value.trim();
+    const destination = document.getElementById("destination").value.trim();
+    const driverName = document.getElementById("driverName").value.trim();
 
     if (!selectedProfile) {
-
-        alert(
-            "Please select a truck profile."
-        );
-
+        alert("Please select a truck profile.");
         return;
     }
-
 
     if (!start || !destination) {
-
-        alert(
-            "Please enter a starting location and destination."
-        );
-
+        alert("Please enter a starting location and destination.");
         return;
     }
 
-
-    // ===========================
-    // ROUTE REQUEST
-    // ===========================
-
     const routeRequest = {
-
         start: start,
-
         destination: destination,
-
         truck: {
-
-            name:
-                selectedProfile.name,
-
-            fleetNumber:
-                selectedProfile.fleetNumber,
-
-            registration:
-                selectedProfile.registration,
-
-            vin:
-                selectedProfile.vin,
-
-            make:
-                selectedProfile.make,
-
-            model:
-                selectedProfile.model,
-
-            year:
-                selectedProfile.year,
-
-            fuelType:
-                selectedProfile.fuelType,
-
-            grossVehicleWeightKg:
-                selectedProfile.grossVehicleWeightKg,
-
-            payloadCapacityKg:
-                selectedProfile.payloadCapacityKg,
-
-            enginePowerKw:
-                selectedProfile.enginePowerKw,
-
-            fuelTankCapacityL:
-                selectedProfile.fuelTankCapacityL,
-
-            axleCount:
-                selectedProfile.axleCount,
-
-            vehicleType:
-                selectedProfile.vehicleType,
-
-            length:
-                selectedProfile.length,
-
-            width:
-                selectedProfile.width,
-
-            height:
-                selectedProfile.height,
-
-            odometerKm:
-                selectedProfile.odometerKm,
-
-            status:
-                selectedProfile.status,
-
-            lastServiceDate:
-                selectedProfile.lastServiceDate,
-
-            nextServiceDueKm:
-                selectedProfile.nextServiceDueKm
-
+            name: selectedProfile.name,
+            registration: selectedProfile.registration,
+            weight: selectedProfile.weight,
+            height: selectedProfile.height,
+            length: selectedProfile.length,
+            fuel: selectedProfile.fuel
         },
-
         driver: {
-
-            name:
-                driverName,
-
-            licence:
-                document
-                    .getElementById("driverLicence")
-                    .value,
-
-            phone:
-                document
-                    .getElementById("driverPhone")
-                    .value,
-
-            drivingHours:
-                Number(
-                    document
-                        .getElementById("driverHours")
-                        .value
-                )
-
+            name: driverName || "Unassigned",
+            licence: document.getElementById("driverLicence").value,
+            phone: document.getElementById("driverPhone").value,
+            drivingHours: parseFloat(document.getElementById("driverHours").value) || 9.0
         }
-
     };
 
-    console.log(
-        "Sending to FastAPI:",
-        routeRequest
-    );
+    try {
+        const response = await fetch("http://127.0.0.1:8000/route", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(routeRequest)
+        });
 
+        if (!response.ok) throw new Error(`Server error: ${response.status}`);
 
-    /*
-        NEXT STEP:
+        const route = await response.json();
 
-        const response = await fetch(
-            "http://127.0.0.1:8000/route",
-            {
-                method: "POST",
-
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-
-                body:
-                    JSON.stringify(routeRequest)
-            }
-        );
-
-        const route =
-            await response.json();
+        document.getElementById("distance").textContent = `${route.distance_km} km`;
+        document.getElementById("duration").textContent = route.duration_text;
+        document.getElementById("fuelRequired").textContent = `${route.fuel_required_liters} L`;
 
         drawRoute(route);
-    */
+    } catch (err) {
+        console.error("Error calculating route:", err);
+        alert("Failed to calculate route. Ensure FastAPI backend is running.");
+    }
 }
 
+function drawRoute(route) {
+    routeLayerGroup.clearLayers();
+
+    const startMarker = L.marker(route.start_coord).bindPopup(`<b>Start:</b> Origin`);
+    const destMarker = L.marker(route.dest_coord).bindPopup(`<b>Destination:</b> Destination`);
+    const polyline = L.polyline(route.waypoints, { color: '#2563eb', weight: 5 });
+
+    routeLayerGroup.addLayer(startMarker);
+    routeLayerGroup.addLayer(destMarker);
+    routeLayerGroup.addLayer(polyline);
+
+    map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+}
 
 // ===============================
 // START APPLICATION
