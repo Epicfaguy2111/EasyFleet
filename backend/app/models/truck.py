@@ -1,7 +1,4 @@
-
-from dataclasses import dataclass, field
 from datetime import date
-from enum import Enum
 from typing import Optional
 
 
@@ -69,25 +66,23 @@ LEGAL_LIMITS: dict[VehicleType, LegalDimensionalLimits] = {
 class Truck:
     vin: str
     fleet_number: str
+    registration: str
+    vin: str
     make: str
     model: str
     year: int
-
-
-    fuel_type: FuelType = FuelType.DIESEL
-    gross_vehicle_weight_kg: float = 0.0     
-    payload_capacity_kg: float = 0.0
-    engine_power_kw: float = 0.0
-    fuel_tank_capacity_l: float = 0.0
-    axle_count: int = 2
-
-    vehicle_type: VehicleType = VehicleType.SINGLE_RIGID
-    length_m: float = 0.0
-    width_m: float = 0.0
-    height_m: float = 0.0
-
-    odometer_km: float = 0.0
-    status: TruckStatus = TruckStatus.ACTIVE
+    fuel_type: str
+    vehicle_type: str
+    axles: int
+    engine_power: float
+    weight: float
+    payload: float
+    fuel: float
+    length: float
+    width: float
+    height: float
+    odometer: float
+    status: str
     last_service_date: Optional[date] = None
     next_service_due_km: Optional[float] = None
     assigned_driver: Optional[str] = None
