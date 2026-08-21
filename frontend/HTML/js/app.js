@@ -55,32 +55,143 @@ const legalLimits = {
 // ===============================
 
 async function loadProfiles() {
+
     try {
-        const response = await fetch("http://127.0.0.1:8000/trucks/");
+
+        const response =
+            await fetch(
+                "http://127.0.0.1:8000/trucks/"
+            );
+
+
         if (response.ok) {
-            const data = await response.json();
+
+            const data =
+                await response.json();
+
+
             truckProfiles = data.map(truck => ({
+
+                // ==========================
+                // IDENTIFICATION
+                // ==========================
+
                 id: truck.id,
-                name: truck.name,
-                registration: truck.registration,
-                weight: truck.weight,
-                height: truck.height,
-                length: truck.length,
-                fuel: truck.fuel,
-                driver: {
-                    name: truck.driver?.name || "",
-                    licence: truck.driver?.licence || "",
-                    phone: truck.driver?.phone || ""
-                }
+
+                vin:
+                    truck.vin || "",
+
+                fleetNumber:
+                    truck.fleet_number || "",
+
+                name:
+                    truck.name || "",
+
+                registration:
+                    truck.registration || "",
+
+                make:
+                    truck.make || "",
+
+                model:
+                    truck.model || "",
+
+                year:
+                    truck.year || null,
+
+
+                // ==========================
+                // ENGINE / VEHICLE
+                // ==========================
+
+                fuelType:
+                    truck.fuel_type || "diesel",
+
+                grossVehicleWeightKg:
+                    truck.gross_vehicle_weight_kg || 0,
+
+                payloadCapacityKg:
+                    truck.payload_capacity_kg || 0,
+
+                enginePowerKw:
+                    truck.engine_power_kw || 0,
+
+                fuelTankCapacityL:
+                    truck.fuel_tank_capacity_l || 0,
+
+                axleCount:
+                    truck.axle_count || 2,
+
+
+                // ==========================
+                // VEHICLE TYPE
+                // ==========================
+
+                vehicleType:
+                    truck.vehicle_type || "single_rigid",
+
+
+                // ==========================
+                // DIMENSIONS
+                // ==========================
+
+                lengthM:
+                    truck.length_m ?? truck.length ?? 0,
+
+                widthM:
+                    truck.width_m ?? truck.width ?? 0,
+
+                heightM:
+                    truck.height_m ?? truck.height ?? 0,
+
+
+                // ==========================
+                // OPERATION
+                // ==========================
+
+                odometerKm:
+                    truck.odometer_km || 0,
+
+                status:
+                    truck.status || "active",
+
+                lastServiceDate:
+                    truck.last_service_date || null,
+
+                nextServiceDueKm:
+                    truck.next_service_due_km || null
+
+                
+
             }));
+
         }
-    } catch (err) {
-        console.warn("Could not load from API, falling back to local cache:", err);
-        const savedProfiles = localStorage.getItem("truckProfiles");
-        if (savedProfiles) {
-            truckProfiles = JSON.parse(savedProfiles);
-        }
+
     }
+
+    catch (err) {
+
+        console.warn(
+            "Could not load from API, falling back to local cache:",
+            err
+        );
+
+
+        const savedProfiles =
+            localStorage.getItem(
+                "truckProfiles"
+            );
+
+
+        if (savedProfiles) {
+
+            truckProfiles =
+                JSON.parse(savedProfiles);
+
+        }
+
+    }
+
 
     updateProfileDropdown();
 }
@@ -254,20 +365,18 @@ function displayProfile(profile) {
 
 
     setText(
-        "truckLength",
-        `${profile.length} m`
+    "truckLength",
+    `${profile.lengthM} m`
     );
-
 
     setText(
         "truckWidth",
-        `${profile.width} m`
+        `${profile.widthM} m`
     );
-
 
     setText(
         "truckHeight",
-        `${profile.height} m`
+        `${profile.heightM} m`
     );
 
 
@@ -615,82 +724,501 @@ document
     .getElementById("saveProfileButton")
     .addEventListener("click", saveProfile);
 
-async function saveProfile() {
-    const name = document.getElementById("newTruckName").value.trim();
-    const registration = document.getElementById("newRegistration").value.trim();
-    const weight = document.getElementById("newWeight").value;
-    const height = document.getElementById("newHeight").value;
-    const length = document.getElementById("newLength").value;
-    const fuel = document.getElementById("newFuel").value;
-    const driverName = document.getElementById("newDriverName").value.trim();
-    const driverLicence = document.getElementById("newDriverLicence").value.trim();
-    const driverPhone = document.getElementById("newDriverPhone").value.trim();
 
-    // Basic validation
-    if (!name || !registration || !weight || !height || !length || !fuel) {
-        alert("Please complete all truck information.");
+async function saveProfile() {
+
+    console.log("Save Profile button clicked.");
+
+    // ===============================
+    // IDENTIFICATION
+    // ===============================
+
+    const vin =
+        document.getElementById("newVin").value.trim();
+
+    const fleetNumber =
+        document.getElementById("newFleetNumber").value.trim();
+
+    const name =
+        document.getElementById("newTruckName").value.trim();
+
+    const registration =
+        document.getElementById("newRegistration").value.trim();
+
+    const make =
+        document.getElementById("newMake").value.trim();
+
+    const model =
+        document.getElementById("newModel").value.trim();
+
+    const year =
+        document.getElementById("newYear").value;
+
+
+    // ===============================
+    // VEHICLE SPECIFICATIONS
+    // ===============================
+
+    const fuelType =
+        document.getElementById("newFuelType").value;
+
+    // IMPORTANT:
+    // These IDs match your HTML
+    const grossVehicleWeight =
+        document.getElementById("newWeight").value;
+
+    const payloadCapacity =
+        document.getElementById("newPayload").value;
+
+    const enginePower =
+        document.getElementById("newEnginePower").value;
+
+    const fuelTankCapacity =
+        document.getElementById("newFuel").value;
+
+    const axleCount =
+        document.getElementById("newAxleCount").value;
+
+    const vehicleType =
+        document.getElementById("newVehicleType").value;
+
+
+    // ===============================
+    // DIMENSIONS
+    // ===============================
+
+    const length =
+        document.getElementById("newLength").value;
+
+    const width =
+        document.getElementById("newWidth").value;
+
+    const height =
+        document.getElementById("newHeight").value;
+
+
+    // ===============================
+    // OPERATION
+    // ===============================
+
+    const odometer =
+        document.getElementById("newOdometer").value;
+
+    const status =
+        document.getElementById("newStatus").value;
+
+    // These IDs match your HTML
+    const lastServiceDate =
+        document.getElementById("newLastService").value;
+
+    const nextServiceDue =
+        document.getElementById("newNextService").value;
+
+
+    // ===============================
+    // VALIDATE DIMENSIONS
+    // ===============================
+
+    if (!validateDimensions()) {
+
+        alert(
+            "One or more vehicle dimensions exceed the legal limit."
+        );
+
         return;
     }
 
+
+    // ===============================
+    // VALIDATION
+    // ===============================
+
+    if (
+        !vin ||
+        !fleetNumber ||
+        !name ||
+        !registration ||
+        !make ||
+        !model ||
+        !year ||
+        !fuelType ||
+        !grossVehicleWeight ||
+        !payloadCapacity ||
+        !enginePower ||
+        !fuelTankCapacity ||
+        !axleCount ||
+        !vehicleType ||
+        !length ||
+        !width ||
+        !height ||
+        !odometer
+    ) {
+
+        alert(
+            "Please complete all required truck information."
+        );
+
+        return;
+    }
+
+
+    // ===============================
+    // BUILD API PAYLOAD
+    // ===============================
+
     const payload = {
-        name: name,
-        registration: registration,
-        weight: Number(weight),
-        height: Number(height),
-        length: Number(length),
-        fuel: Number(fuel),
-        driver: {
-            name: driverName,
-            licence: driverLicence,
-            phone: driverPhone
-        }
+
+        // Identification
+        vin: vin,
+
+        fleet_number:
+            fleetNumber,
+
+        name:
+            name,
+
+        registration:
+            registration,
+
+        make:
+            make,
+
+        model:
+            model,
+
+        year:
+            Number(year),
+
+
+        // Vehicle specifications
+        fuel_type:
+            fuelType,
+
+        gross_vehicle_weight_kg:
+            Number(grossVehicleWeight),
+
+        payload_capacity_kg:
+            Number(payloadCapacity),
+
+        engine_power_kw:
+            Number(enginePower),
+
+        fuel_tank_capacity_l:
+            Number(fuelTankCapacity),
+
+        axle_count:
+            Number(axleCount),
+
+
+        // Vehicle classification
+        vehicle_type:
+            vehicleType,
+
+
+        // Dimensions
+        length_m:
+            Number(length),
+
+        width_m:
+            Number(width),
+
+        height_m:
+            Number(height),
+
+
+        // Operation
+        odometer_km:
+            Number(odometer),
+
+        status:
+            status,
+
+        last_service_date:
+            lastServiceDate || null,
+
+        next_service_due_km:
+            nextServiceDue
+                ? Number(nextServiceDue)
+                : null
     };
 
+
+    console.log(
+        "Sending truck to API:",
+        payload
+    );
+
+
+    // ===============================
+    // SEND TO FASTAPI
+    // ===============================
+
     try {
-        const response = await fetch("http://127.0.0.1:8000/trucks/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
+
+        const response =
+            await fetch(
+                "http://127.0.0.1:8000/trucks/",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(payload)
+                }
+            );
+
+
+        // ===============================
+        // HANDLE API ERROR
+        // ===============================
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || "Failed to save truck profile.");
+
+            let errorMessage =
+                "Failed to save truck profile.";
+
+            try {
+
+                const errorData =
+                    await response.json();
+
+                console.error(
+                    "FastAPI error:",
+                    errorData
+                );
+
+                if (errorData.detail) {
+
+                    if (
+                        Array.isArray(
+                            errorData.detail
+                        )
+                    ) {
+
+                        errorMessage =
+                            errorData.detail
+                                .map(error =>
+                                    `${error.loc?.join(".") || "Field"}: ${error.msg}`
+                                )
+                                .join("\n");
+
+                    } else {
+
+                        errorMessage =
+                            errorData.detail;
+                    }
+                }
+
+            } catch {
+
+                // Response was not JSON
+            }
+
+            throw new Error(
+                errorMessage
+            );
         }
 
-        const savedTruck = await response.json();
 
-        // Standardize format for local UI state
+        // ===============================
+        // GET SAVED TRUCK
+        // ===============================
+
+        const savedTruck =
+            await response.json();
+
+        console.log(
+            "Truck saved by FastAPI:",
+            savedTruck
+        );
+
+
+        // ===============================
+        // STANDARDIZE PROFILE
+        // ===============================
+
         const profile = {
-            id: savedTruck.id,
-            name: savedTruck.name,
-            registration: savedTruck.registration,
-            weight: savedTruck.weight,
-            height: savedTruck.height,
-            length: savedTruck.length,
-            fuel: savedTruck.fuel,
-            driver: {
-                name: savedTruck.driver?.name || driverName,
-                licence: savedTruck.driver?.licence || driverLicence,
-                phone: savedTruck.driver?.phone || driverPhone
-            }
+
+            id:
+                savedTruck.id,
+
+            vin:
+                savedTruck.vin || vin,
+
+            fleetNumber:
+                savedTruck.fleet_number ||
+                fleetNumber,
+
+            name:
+                savedTruck.name ||
+                name,
+
+            registration:
+                savedTruck.registration ||
+                registration,
+
+            make:
+                savedTruck.make ||
+                make,
+
+            model:
+                savedTruck.model ||
+                model,
+
+            year:
+                savedTruck.year ??
+                Number(year),
+
+
+            // Vehicle specifications
+
+            fuelType:
+                savedTruck.fuel_type ||
+                fuelType,
+
+            grossVehicleWeightKg:
+                savedTruck.gross_vehicle_weight_kg ??
+                Number(grossVehicleWeight),
+
+            payloadCapacityKg:
+                savedTruck.payload_capacity_kg ??
+                Number(payloadCapacity),
+
+            enginePowerKw:
+                savedTruck.engine_power_kw ??
+                Number(enginePower),
+
+            fuelTankCapacityL:
+                savedTruck.fuel_tank_capacity_l ??
+                Number(fuelTankCapacity),
+
+            axleCount:
+                savedTruck.axle_count ??
+                Number(axleCount),
+
+
+            // Classification
+
+            vehicleType:
+                savedTruck.vehicle_type ||
+                vehicleType,
+
+
+            // Dimensions
+
+            lengthM:
+                savedTruck.length_m ??
+                Number(length),
+
+            widthM:
+                savedTruck.width_m ??
+                Number(width),
+
+            heightM:
+                savedTruck.height_m ??
+                Number(height),
+
+
+            // Operation
+
+            odometerKm:
+                savedTruck.odometer_km ??
+                Number(odometer),
+
+            status:
+                savedTruck.status ||
+                status,
+
+            lastServiceDate:
+                savedTruck.last_service_date ??
+                lastServiceDate ??
+                null,
+
+            nextServiceDueKm:
+                savedTruck.next_service_due_km ??
+                (
+                    nextServiceDue
+                        ? Number(nextServiceDue)
+                        : null
+                )
         };
 
+
+        // ===============================
+        // UPDATE LOCAL STATE
+        // ===============================
+
         truckProfiles.push(profile);
+
+
+        localStorage.setItem(
+            "truckProfiles",
+            JSON.stringify(truckProfiles)
+        );
+
+
+        // ===============================
+        // UPDATE DROPDOWN
+        // ===============================
+
         updateProfileDropdown();
 
-        // Select the newly added truck
-        document.getElementById("truckProfile").value = profile.id;
-        selectedProfile = profile;
+
+        // ===============================
+        // SELECT NEW TRUCK
+        // ===============================
+
+        document
+            .getElementById("truckProfile")
+            .value = profile.id;
+
+
+        selectedProfile =
+            profile;
+
+
+        // ===============================
+        // DISPLAY PROFILE
+        // ===============================
+
         displayProfile(profile);
 
+
+        // ===============================
+        // CLOSE MODAL
+        // ===============================
+
         closeModal();
+
+
+        // ===============================
+        // CLEAR FORM
+        // ===============================
+
         clearProfileForm();
-    } catch (err) {
-        console.error("Error saving truck:", err);
-        alert(`Error: ${err.message}`);
+
+
+        console.log(
+            "Truck profile saved successfully:",
+            profile
+        );
+
+    }
+
+    catch (err) {
+
+        console.error(
+            "Error saving truck:",
+            err
+        );
+
+        alert(
+            `Error: ${err.message}`
+        );
     }
 }
 
@@ -893,13 +1421,13 @@ async function calculateRoute() {
                 selectedProfile.vehicleType,
 
             length:
-                selectedProfile.length,
+                selectedProfile.lengthM,
 
             width:
-                selectedProfile.width,
+                selectedProfile.widthM,
 
             height:
-                selectedProfile.height,
+                selectedProfile.heightM,
 
             odometerKm:
                 selectedProfile.odometerKm,
@@ -912,32 +1440,9 @@ async function calculateRoute() {
 
             nextServiceDueKm:
                 selectedProfile.nextServiceDueKm
-
-        },
-
-        driver: {
-
-            name:
-                driverName,
-
-            licence:
-                document
-                    .getElementById("driverLicence")
-                    .value,
-
-            phone:
-                document
-                    .getElementById("driverPhone")
-                    .value,
-
-            drivingHours:
-                Number(
-                    document
-                        .getElementById("driverHours")
-                        .value
-                )
-
         }
+
+        
 
     };
 
