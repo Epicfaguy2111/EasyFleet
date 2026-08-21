@@ -24,6 +24,31 @@ let truckProfiles = [];
 
 let selectedProfile = null;
 
+// ===============================
+// LEGAL DIMENSIONAL LIMITS
+// ===============================
+
+const legalLimits = {
+
+    single_rigid: {
+        length: 12.5,
+        width: 2.6,
+        height: 4.3
+    },
+
+    articulated: {
+        length: 18.5,
+        width: 2.6,
+        height: 4.3
+    },
+
+    other_combination: {
+        length: 22.0,
+        width: 2.6,
+        height: 4.3
+    }
+
+};
 
 // ===============================
 // LOAD PROFILES
@@ -144,58 +169,175 @@ function displayProfile(profile) {
         .style.display = "block";
 
 
-    document
-        .getElementById("truckName")
-        .textContent = profile.name;
+    setText(
+        "truckName",
+        profile.name
+    );
 
 
-    document
-        .getElementById("registration")
-        .textContent = profile.registration;
+    setText(
+        "truckFleetNumber",
+        profile.fleetNumber || "--"
+    );
 
 
-    document
-        .getElementById("truckWeight")
-        .textContent =
-            `${profile.weight} tons`;
+    setText(
+        "truckVin",
+        profile.vin || "--"
+    );
 
 
-    document
-        .getElementById("truckHeight")
-        .textContent =
-            `${profile.height} m`;
+    setText(
+        "truckMake",
+        profile.make || "--"
+    );
 
 
-    document
-        .getElementById("truckLength")
-        .textContent =
-            `${profile.length} m`;
+    setText(
+        "truckModel",
+        profile.model || "--"
+    );
 
 
-    document
-        .getElementById("truckFuel")
-        .textContent =
-            `${profile.fuel} L`;
+    setText(
+        "truckYear",
+        profile.year || "--"
+    );
 
 
-    // Load default driver
-
-    document
-        .getElementById("driverName")
-        .value =
-            profile.driver.name;
+    setText(
+        "truckFuelType",
+        formatEnum(profile.fuelType)
+    );
 
 
-    document
-        .getElementById("driverLicence")
-        .value =
-            profile.driver.licence;
+    setText(
+        "truckStatus",
+        formatEnum(profile.status)
+    );
 
 
-    document
-        .getElementById("driverPhone")
-        .value =
-            profile.driver.phone;
+    setText(
+        "truckWeight",
+        formatNumber(profile.grossVehicleWeightKg) + " kg"
+    );
+
+
+    setText(
+        "truckPayload",
+        formatNumber(profile.payloadCapacityKg) + " kg"
+    );
+
+
+    setText(
+        "truckEnginePower",
+        formatNumber(profile.enginePowerKw) + " kW"
+    );
+
+
+    setText(
+        "truckFuel",
+        formatNumber(profile.fuelTankCapacityL) + " L"
+    );
+
+
+    setText(
+        "truckAxles",
+        profile.axleCount || "--"
+    );
+
+
+    setText(
+        "truckVehicleType",
+        formatEnum(profile.vehicleType)
+    );
+
+
+    setText(
+        "truckLength",
+        `${profile.length} m`
+    );
+
+
+    setText(
+        "truckWidth",
+        `${profile.width} m`
+    );
+
+
+    setText(
+        "truckHeight",
+        `${profile.height} m`
+    );
+
+
+    setText(
+        "truckOdometer",
+        formatNumber(profile.odometerKm) + " km"
+    );
+
+
+    setText(
+        "truckNextService",
+        profile.nextServiceDueKm !== null &&
+        profile.nextServiceDueKm !== undefined
+            ? formatNumber(profile.nextServiceDueKm) + " km"
+            : "Not set"
+    );
+
+
+}
+
+
+// ===============================
+// HELPER FUNCTIONS
+// ===============================
+
+function setText(id, value) {
+
+    const element =
+        document.getElementById(id);
+
+    if (element) {
+
+        element.textContent =
+            value ?? "--";
+
+    }
+
+}
+
+
+function formatNumber(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+
+        return "--";
+
+    }
+
+    return Number(value).toLocaleString();
+
+}
+
+
+function formatEnum(value) {
+
+    if (!value) {
+
+        return "--";
+
+    }
+
+    return value
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, char =>
+            char.toUpperCase()
+        );
 }
 
 
@@ -214,6 +356,12 @@ document
         function () {
 
             modal.style.display = "flex";
+
+            updateDimensionLimits();
+
+            document
+                .getElementById("newTruckName")
+                .focus();
         }
     );
 
@@ -237,6 +385,225 @@ document
 function closeModal() {
 
     modal.style.display = "none";
+}
+
+
+// Close modal when clicking outside it
+
+modal.addEventListener(
+    "click",
+    function (event) {
+
+        if (event.target === modal) {
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+// ===============================
+// VEHICLE TYPE / DIMENSIONS
+// ===============================
+
+document
+    .getElementById("newVehicleType")
+    .addEventListener(
+        "change",
+        updateDimensionLimits
+    );
+
+
+function updateDimensionLimits() {
+
+    const vehicleType =
+        document.getElementById("newVehicleType").value;
+
+
+    const lengthInput =
+        document.getElementById("newLength");
+
+
+    const widthInput =
+        document.getElementById("newWidth");
+
+
+    const heightInput =
+        document.getElementById("newHeight");
+
+
+    const limitText =
+        document.getElementById("dimensionLimitText");
+
+
+    const lengthLimit =
+        document.getElementById("lengthLimit");
+
+
+    const widthLimit =
+        document.getElementById("widthLimit");
+
+
+    const heightLimit =
+        document.getElementById("heightLimit");
+
+
+    if (!legalLimits[vehicleType]) {
+
+        lengthInput.max = "22";
+        widthInput.max = "2.6";
+        heightInput.max = "4.3";
+
+        limitText.textContent =
+            "Select a vehicle type to view the applicable limits.";
+
+        lengthLimit.textContent =
+            "Select vehicle type first.";
+
+        widthLimit.textContent =
+            "Maximum: 2.6 m";
+
+        heightLimit.textContent =
+            "Maximum: 4.3 m";
+
+        return;
+    }
+
+
+    const limits =
+        legalLimits[vehicleType];
+
+
+    lengthInput.max =
+        limits.length;
+
+
+    widthInput.max =
+        limits.width;
+
+
+    heightInput.max =
+        limits.height;
+
+
+    limitText.textContent =
+        `Maximum dimensions: ` +
+        `${limits.length.toFixed(1)} m long × ` +
+        `${limits.width.toFixed(1)} m wide × ` +
+        `${limits.height.toFixed(1)} m high.`;
+
+
+    lengthLimit.textContent =
+        `Maximum: ${limits.length.toFixed(1)} m`;
+
+
+    widthLimit.textContent =
+        `Maximum: ${limits.width.toFixed(1)} m`;
+
+
+    heightLimit.textContent =
+        `Maximum: ${limits.height.toFixed(1)} m`;
+
+
+    validateDimensions();
+}
+
+
+// ===============================
+// DIMENSION VALIDATION
+// ===============================
+
+[
+    "newLength",
+    "newWidth",
+    "newHeight"
+].forEach(id => {
+
+    document
+        .getElementById(id)
+        .addEventListener(
+            "input",
+            validateDimensions
+        );
+
+});
+
+
+function validateDimensions() {
+
+    const vehicleType =
+        document.getElementById("newVehicleType").value;
+
+
+    if (!legalLimits[vehicleType]) {
+
+        return false;
+
+    }
+
+
+    const limits =
+        legalLimits[vehicleType];
+
+
+    const length =
+        Number(
+            document.getElementById("newLength").value
+        );
+
+
+    const width =
+        Number(
+            document.getElementById("newWidth").value
+        );
+
+
+    const height =
+        Number(
+            document.getElementById("newHeight").value
+        );
+
+
+    const lengthInput =
+        document.getElementById("newLength");
+
+
+    const widthInput =
+        document.getElementById("newWidth");
+
+
+    const heightInput =
+        document.getElementById("newHeight");
+
+
+    lengthInput.setCustomValidity(
+        length > limits.length
+            ? `Maximum length is ${limits.length} m.`
+            : ""
+    );
+
+
+    widthInput.setCustomValidity(
+        width > limits.width
+            ? `Maximum width is ${limits.width} m.`
+            : ""
+    );
+
+
+    heightInput.setCustomValidity(
+        height > limits.height
+            ? `Maximum height is ${limits.height} m.`
+            : ""
+    );
+
+
+    return (
+        length <= limits.length &&
+        width <= limits.width &&
+        height <= limits.height
+    );
 }
 
 
@@ -334,50 +701,89 @@ async function saveProfile() {
 
 function clearProfileForm() {
 
+    const fields = [
+
+        "newTruckName",
+        "newFleetNumber",
+        "newRegistration",
+        "newVin",
+        "newMake",
+        "newModel",
+        "newYear",
+        "newWeight",
+        "newPayload",
+        "newEnginePower",
+        "newFuel",
+        "newAxleCount",
+        "newLength",
+        "newWidth",
+        "newHeight",
+        "newOdometer",
+        "newLastService",
+        "newNextService",
+        "newDriverName",
+        "newDriverLicence",
+        "newDriverPhone",
+        "newNotes"
+
+    ];
+
+
+    fields.forEach(id => {
+
+        const element =
+            document.getElementById(id);
+
+        if (element) {
+
+            element.value = "";
+
+        }
+
+    });
+
+
     document
-        .getElementById("newTruckName")
+        .getElementById("newStatus")
+        .value = "active";
+
+
+    document
+        .getElementById("newFuelType")
         .value = "";
 
 
     document
-        .getElementById("newRegistration")
+        .getElementById("newVehicleType")
         .value = "";
 
 
     document
-        .getElementById("newWeight")
-        .value = "";
+        .getElementById("newAxleCount")
+        .value = "2";
 
 
     document
-        .getElementById("newHeight")
-        .value = "";
+        .getElementById("newVin")
+        .setCustomValidity("");
 
 
-    document
-        .getElementById("newLength")
-        .value = "";
+    [
+        "newLength",
+        "newWidth",
+        "newHeight"
+    ].forEach(id => {
+
+        document
+            .getElementById(id)
+            .setCustomValidity("");
+
+    });
 
 
-    document
-        .getElementById("newFuel")
-        .value = "";
-
-
-    document
-        .getElementById("newDriverName")
-        .value = "";
-
-
-    document
-        .getElementById("newDriverLicence")
-        .value = "";
-
-
-    document
-        .getElementById("newDriverPhone")
-        .value = "";
+    updateDimensionLimits();
 }
+
 
 
 // ===============================
@@ -397,19 +803,19 @@ async function calculateRoute() {
     const start =
         document
             .getElementById("start")
-            .value;
+            .value.trim();
 
 
     const destination =
         document
             .getElementById("destination")
-            .value;
+            .value.trim();
 
 
     const driverName =
         document
             .getElementById("driverName")
-            .value;
+            .value.trim();
 
 
     if (!selectedProfile) {
@@ -432,6 +838,10 @@ async function calculateRoute() {
     }
 
 
+    // ===========================
+    // ROUTE REQUEST
+    // ===========================
+
     const routeRequest = {
 
         start: start,
@@ -440,27 +850,75 @@ async function calculateRoute() {
 
         truck: {
 
-            name: selectedProfile.name,
+            name:
+                selectedProfile.name,
+
+            fleetNumber:
+                selectedProfile.fleetNumber,
 
             registration:
                 selectedProfile.registration,
 
-            weight:
-                selectedProfile.weight,
+            vin:
+                selectedProfile.vin,
 
-            height:
-                selectedProfile.height,
+            make:
+                selectedProfile.make,
+
+            model:
+                selectedProfile.model,
+
+            year:
+                selectedProfile.year,
+
+            fuelType:
+                selectedProfile.fuelType,
+
+            grossVehicleWeightKg:
+                selectedProfile.grossVehicleWeightKg,
+
+            payloadCapacityKg:
+                selectedProfile.payloadCapacityKg,
+
+            enginePowerKw:
+                selectedProfile.enginePowerKw,
+
+            fuelTankCapacityL:
+                selectedProfile.fuelTankCapacityL,
+
+            axleCount:
+                selectedProfile.axleCount,
+
+            vehicleType:
+                selectedProfile.vehicleType,
 
             length:
                 selectedProfile.length,
 
-            fuel:
-                selectedProfile.fuel
+            width:
+                selectedProfile.width,
+
+            height:
+                selectedProfile.height,
+
+            odometerKm:
+                selectedProfile.odometerKm,
+
+            status:
+                selectedProfile.status,
+
+            lastServiceDate:
+                selectedProfile.lastServiceDate,
+
+            nextServiceDueKm:
+                selectedProfile.nextServiceDueKm
+
         },
 
         driver: {
 
-            name: driverName,
+            name:
+                driverName,
 
             licence:
                 document
@@ -473,12 +931,15 @@ async function calculateRoute() {
                     .value,
 
             drivingHours:
-                document
-                    .getElementById("driverHours")
-                    .value
-        }
-    };
+                Number(
+                    document
+                        .getElementById("driverHours")
+                        .value
+                )
 
+        }
+
+    };
 
     console.log(
         "Sending to FastAPI:",
