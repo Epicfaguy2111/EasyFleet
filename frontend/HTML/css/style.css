@@ -1,23 +1,37 @@
+/* =============================== */
+/* GLOBAL */
+/* =============================== */
+
 * {
     box-sizing: border-box;
 }
 
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+
+    font-family:
+        Arial,
+        sans-serif;
+
     background: #f3f4f6;
+
+    color: #1f2937;
 }
 
 
+/* =============================== */
 /* HEADER */
+/* =============================== */
 
 header {
     height: 60px;
 
     background: #1f2937;
+
     color: white;
 
     display: flex;
+
     align-items: center;
 
     padding: 0 20px;
@@ -25,11 +39,14 @@ header {
 
 header h1 {
     margin: 0;
+
     font-size: 22px;
 }
 
 
+/* =============================== */
 /* APPLICATION */
+/* =============================== */
 
 .application {
     display: flex;
@@ -38,7 +55,9 @@ header h1 {
 }
 
 
+/* =============================== */
 /* SIDEBAR */
+/* =============================== */
 
 .sidebar {
     width: 380px;
@@ -51,7 +70,9 @@ header h1 {
 }
 
 
+/* =============================== */
 /* PANELS */
+/* =============================== */
 
 .panel {
     background: white;
@@ -62,7 +83,9 @@ header h1 {
 
     border-radius: 8px;
 
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow:
+        0 1px 3px
+        rgba(0, 0, 0, 0.1);
 }
 
 .panel h3 {
@@ -70,7 +93,9 @@ header h1 {
 }
 
 
+/* =============================== */
 /* FORM */
+/* =============================== */
 
 .form-group {
     margin-bottom: 15px;
@@ -82,25 +107,113 @@ header h1 {
     margin-bottom: 5px;
 
     font-weight: bold;
+
+    color: #374151;
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
     width: 100%;
 
     padding: 10px;
 
-    border: 1px solid #ccc;
+    border:
+        1px solid #ccc;
 
     border-radius: 5px;
 
     font-size: 14px;
 
     background: white;
+
+    font-family: inherit;
+}
+
+.form-group textarea {
+    resize: vertical;
+
+    min-height: 80px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(37, 99, 235, 0.15);
 }
 
 
+/* =============================== */
+/* REQUIRED FIELDS */
+/* =============================== */
+
+.form-group input:required:invalid,
+.form-group select:required:invalid {
+    border-color: #ccc;
+}
+
+.form-group input:focus:invalid,
+.form-group select:focus:invalid {
+    border-color: #dc2626;
+}
+
+
+/* =============================== */
+/* FIELD HELP */
+/* =============================== */
+
+.field-help {
+    display: block;
+
+    margin-top: 4px;
+
+    font-size: 12px;
+
+    color: #6b7280;
+}
+
+
+/* =============================== */
+/* LEGAL LIMIT BOX */
+/* =============================== */
+
+.legal-limit-box {
+    background: #eff6ff;
+
+    border:
+        1px solid #bfdbfe;
+
+    border-radius: 6px;
+
+    padding: 10px 12px;
+
+    margin-bottom: 15px;
+
+    color: #1e40af;
+}
+
+.legal-limit-box strong {
+    display: block;
+
+    margin-bottom: 4px;
+}
+
+.legal-limit-box p {
+    margin: 0;
+
+    font-size: 13px;
+}
+
+
+/* =============================== */
 /* TWO COLUMN FORM */
+/* =============================== */
 
 .form-row {
     display: flex;
@@ -113,7 +226,9 @@ header h1 {
 }
 
 
+/* =============================== */
 /* BUTTONS */
+/* =============================== */
 
 button {
     border: none;
@@ -125,6 +240,12 @@ button {
     font-size: 14px;
 
     cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.6;
+
+    cursor: not-allowed;
 }
 
 .primary-button {
@@ -154,16 +275,21 @@ button {
 }
 
 
+/* =============================== */
 /* TRUCK INFORMATION */
+/* =============================== */
 
 .info-row {
     display: flex;
 
     justify-content: space-between;
 
+    gap: 10px;
+
     padding: 7px 0;
 
-    border-bottom: 1px solid #eee;
+    border-bottom:
+        1px solid #eee;
 }
 
 .info-row:last-child {
@@ -172,10 +298,37 @@ button {
 
 .info-row span {
     color: #6b7280;
+
+    flex-shrink: 0;
+}
+
+.info-row strong {
+    text-align: right;
+
+    word-break: break-word;
 }
 
 
+/* =============================== */
+/* ROUTE INFORMATION */
+/* =============================== */
+
+.route-info p {
+    display: flex;
+
+    justify-content: space-between;
+
+    margin: 8px 0;
+}
+
+.route-info span {
+    font-weight: bold;
+}
+
+
+/* =============================== */
 /* MAP */
+/* =============================== */
 
 #map {
     flex: 1;
@@ -184,26 +337,33 @@ button {
 }
 
 
+/* =============================== */
 /* MODAL */
+/* =============================== */
 
 .modal {
     display: none;
 
     position: fixed;
+
     inset: 0;
 
-    background: rgba(0, 0, 0, 0.5);
+    background:
+        rgba(0, 0, 0, 0.5);
 
     justify-content: center;
+
     align-items: center;
 
     z-index: 1000;
+
+    padding: 20px;
 }
 
 .modal-content {
-    width: 500px;
+    width: 600px;
 
-    max-width: 90%;
+    max-width: 95%;
 
     max-height: 90vh;
 
@@ -214,7 +374,33 @@ button {
     border-radius: 10px;
 
     padding: 25px;
+
+    box-shadow:
+        0 10px 30px
+        rgba(0, 0, 0, 0.25);
 }
+
+.modal-content h3 {
+    margin-top: 25px;
+
+    margin-bottom: 15px;
+
+    padding-bottom: 8px;
+
+    border-bottom:
+        1px solid #e5e7eb;
+
+    color: #1f2937;
+}
+
+.modal-content h3:first-of-type {
+    margin-top: 10px;
+}
+
+
+/* =============================== */
+/* MODAL HEADER */
+/* =============================== */
 
 .modal-header {
     display: flex;
@@ -222,11 +408,20 @@ button {
     justify-content: space-between;
 
     align-items: center;
+
+    margin-bottom: 10px;
 }
 
 .modal-header h2 {
-    margin-top: 0;
+    margin: 0;
+
+    color: #111827;
 }
+
+
+/* =============================== */
+/* CLOSE BUTTON */
+/* =============================== */
 
 .close-button {
     background: transparent;
@@ -236,16 +431,93 @@ button {
     padding: 0;
 
     color: #555;
+
+    width: auto;
+
+    line-height: 1;
 }
+
+.close-button:hover {
+    color: #111827;
+}
+
+
+/* =============================== */
+/* MODAL BUTTONS */
+/* =============================== */
 
 .modal-buttons {
     display: flex;
 
     gap: 10px;
 
-    margin-top: 20px;
+    margin-top: 25px;
+
+    padding-top: 15px;
+
+    border-top:
+        1px solid #e5e7eb;
 }
 
 .modal-buttons button {
     flex: 1;
+}
+
+
+/* =============================== */
+/* RESPONSIVE */
+/* =============================== */
+
+@media (max-width: 900px) {
+
+    .application {
+        flex-direction: column;
+
+        height: auto;
+    }
+
+
+    .sidebar {
+        width: 100%;
+
+        max-height: none;
+    }
+
+
+    #map {
+        height: 500px;
+
+        min-height: 500px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .form-row {
+        flex-direction: column;
+
+        gap: 0;
+    }
+
+
+    .modal {
+        padding: 10px;
+    }
+
+
+    .modal-content {
+        padding: 18px;
+
+        max-width: 100%;
+
+        max-height: 95vh;
+    }
+
+
+    .modal-buttons {
+        flex-direction: column;
+    }
+
 }
