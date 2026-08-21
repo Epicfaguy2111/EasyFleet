@@ -3,6 +3,148 @@ import os
 from datetime import datetime
 
 
+class DriverAssignment:
+    def __init__(self, filename="assignments.csv"):
+        self.filename = filename
+        self.initialize_file()
+
+    def initialize_file(self):
+        """Create CSV file with headers if it doesn't exist."""
+        if not os.path.exists(self.filename):
+            with open(self.filename, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    'Assignment ID', 'Driver Name', 'Shipment ID', 'Cargo Type', 
+                    'Destination', 'ETA', 'Assignment Status', 'Date Assigned'
+                ])
+
+    def get_available_drivers(self, driver_filename="truck_drivers.csv"):
+        """Get list of available drivers."""
+        if not os.path.exists(driver_filename):
+            return []
+        
+        with open(driver_filename, 'r') as f:
+            reader = csv.reader(f)
+            drivers = list(reader)
+        
+        return drivers[1:] if len(drivers) > 1 else []
+
+    def get_unassigned_shipments(self, shipment_filename="shipments.csv"):
+        """Get list of shipments without assigned drivers."""
+        if not os.path.exists(shipment_filename):
+            return []
+        
+        with open(shipment_filename, 'r') as f:
+            reader = csv.reader(f)
+            shipments = list(reader)
+        
+        unassigned = []
+        if len(shipments) > 1:
+            with open(self.filename, 'r') as f:
+                reader = csv.reader(f)
+                assignments = list(reader)
+            assigned_shipment_ids = {row[2] for row in assignments[1:]} if len(assignments) > 1 else set()
+            unassigned = [s for s in shipments[1:] if s[0] not in assigned_shipment_ids]
+        
+        return unassigned
+
+    def assign_driver_to_shipment(self):
+        """Assign a driver to a shipment."""
+        drivers = self.get_available_drivers()
+        if not drivers:
+            print("No drivers available in the system.")
+            return None
+        
+        shipments = self.get_unassigned_shipments()
+        if not shipments:
+            print("No unassigned shipments available.")
+            return None
+        
+        print("\n" + "="*60)
+        print("DRIVER ASSIGNMENT")
+        print("="*60)
+        
+        # Display available drivers
+        print("\nAvailable Drivers:")
+        for i, driver in enumerate(drivers, 1):
+            print(f"{i}. {driver[0]} {driver[1]} - {driver[5]} ({driver[6]})")
+        
+        while True:
+            try:
+                driver_choice = int(input("\nSelect driver number: ")) - 1
+                if 0 <= driver_choice < len(drivers):
+                    selected_driver = drivers[driver_choice]
+                    break
+                print("Invalid selection. Please try again.")
+            except ValueError:
+                print("Please enter a valid number.")
+        
+        # Display unassigned shipments
+        print("\nUnassigned Shipments:")
+        for i, shipment in enumerate(shipments, 1):
+            print(f"{i}. ID: {shipment[0]} | Cargo: {shipment[1]} | Destination: {shipment[3]} | ETA: {shipment[4]}")
+        
+        while True:
+            try:
+                shipment_choice = int(input("\nSelect shipment number: ")) - 1
+                if 0 <= shipment_choice < len(shipments):
+                    selected_shipment = shipments[shipment_choice]
+                    break
+                print("Invalid selection. Please try again.")
+            except ValueError:
+                print("Please enter a valid number.")
+        
+        # Create assignment entry
+        assignment_id = f"ASN-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        assignment_data = [
+            assignment_id,
+            f"{selected_driver[0]} {selected_driver[1]}",
+            selected_shipment[0],
+            selected_shipment[1],
+            selected_shipment[3],
+            selected_shipment[4],
+            "Assigned",
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ]
+        
+        return assignment_data
+
+    def save_assignment(self, assignment_data):
+        """Save assignment to CSV file."""
+        with open(self.filename, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(assignment_data)
+        print(f"\n✓ Assignment saved successfully!")
+
+    def display_all_assignments(self):
+        """Display all driver-shipment assignments."""
+        if not os.path.exists(self.filename):
+            print("No assignments found.")
+            return
+
+        with open(self.filename, 'r') as f:
+            reader = csv.reader(f)
+            assignments = list(reader)
+
+        if len(assignments) <= 1:
+            print("No assignments found.")
+            return
+
+        print("\n" + "="*120)
+        print("ALL DRIVER ASSIGNMENTS")
+        print("="*120)
+        
+        # Print header
+        print(f"{'Assignment ID':<20} {'Driver':<25} {'Shipment ID':<15} {'Cargo':<20} {'Destination':<20} {'ETA':<19} {'Status':<12}")
+        print("-"*120)
+        
+        # Print data rows
+        for assignment in assignments[1:]:
+            print(f"{assignment[0]:<20} {assignment[1]:<25} {assignment[2]:<15} {assignment[3]:<20} {assignment[4]:<20} {assignment[5]:<19} {assignment[6]:<12}")
+        
+        print("="*120 + "\n")
+
+
 class CargoTracking:
     def __init__(self, filename="shipments.csv"):
         self.filename = filename
@@ -32,7 +174,6 @@ class CargoTracking:
             return None
 
         cargo_type = input("Enter cargo type (e.g., Electronics, Produce, Chemicals, Furniture): ").strip()
-        driver_name = input("Enter driver name (First Last): ").strip()
         end_location = input("Enter end location (destination): ").strip()
 
         # Get ETA
@@ -42,11 +183,11 @@ class CargoTracking:
                 break
             print("Invalid format. Please use YYYY-MM-DD HH:MM (e.g., 2026-08-25 14:30)")
 
-        status = "In Transit"
+        status = "Pending"
 
-        # Create shipment entry
+        # Create shipment entry (driver assigned later)
         shipment_data = [
-            shipment_id, cargo_type, driver_name, end_location, eta, status,
+            shipment_id, cargo_type, "Unassigned", end_location, eta, status,
             datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         ]
 
@@ -263,6 +404,7 @@ class TruckDriverForm:
     def run(self):
         """Main program loop."""
         cargo_tracker = CargoTracking()
+        driver_assignment = DriverAssignment()
         
         while True:
             print("\n" + "="*50)
@@ -273,10 +415,12 @@ class TruckDriverForm:
             print("3. Add new shipment/cargo")
             print("4. View all shipments")
             print("5. Update shipment status")
-            print("6. Exit")
+            print("6. Assign driver to shipment")
+            print("7. View all assignments")
+            print("8. Exit")
             print("="*50)
             
-            choice = input("Select an option (1-6): ").strip()
+            choice = input("Select an option (1-8): ").strip()
             
             if choice == '1':
                 driver_data = self.collect_information()
@@ -292,10 +436,16 @@ class TruckDriverForm:
             elif choice == '5':
                 cargo_tracker.update_shipment_status()
             elif choice == '6':
+                assignment_data = driver_assignment.assign_driver_to_shipment()
+                if assignment_data:
+                    driver_assignment.save_assignment(assignment_data)
+            elif choice == '7':
+                driver_assignment.display_all_assignments()
+            elif choice == '8':
                 print("\nThank you for using the Truck Driver & Cargo Management System. Goodbye!")
                 break
             else:
-                print("Invalid option. Please select 1-6.")
+                print("Invalid option. Please select 1-8.")
 
 
 if __name__ == "__main__":
