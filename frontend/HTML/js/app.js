@@ -24,6 +24,7 @@ let truckProfiles = [];
 
 let selectedProfile = null;
 
+
 // ===============================
 // LEGAL DIMENSIONAL LIMITS
 // ===============================
@@ -49,6 +50,7 @@ const legalLimits = {
     }
 
 };
+
 
 // ===============================
 // LOAD PROFILES
@@ -76,7 +78,8 @@ async function loadProfiles() {
                 // IDENTIFICATION
                 // ==========================
 
-                id: truck.id,
+                id:
+                    truck.id,
 
                 vin:
                     truck.vin || "",
@@ -97,7 +100,7 @@ async function loadProfiles() {
                     truck.model || "",
 
                 year:
-                    truck.year || null,
+                    truck.year ?? null,
 
 
                 // ==========================
@@ -108,19 +111,19 @@ async function loadProfiles() {
                     truck.fuel_type || "diesel",
 
                 grossVehicleWeightKg:
-                    truck.gross_vehicle_weight_kg || 0,
+                    truck.gross_vehicle_weight_kg ?? 0,
 
                 payloadCapacityKg:
-                    truck.payload_capacity_kg || 0,
+                    truck.payload_capacity_kg ?? 0,
 
                 enginePowerKw:
-                    truck.engine_power_kw || 0,
+                    truck.engine_power_kw ?? 0,
 
                 fuelTankCapacityL:
-                    truck.fuel_tank_capacity_l || 0,
+                    truck.fuel_tank_capacity_l ?? 0,
 
                 axleCount:
-                    truck.axle_count || 2,
+                    truck.axle_count ?? 2,
 
 
                 // ==========================
@@ -136,13 +139,19 @@ async function loadProfiles() {
                 // ==========================
 
                 lengthM:
-                    truck.length_m ?? truck.length ?? 0,
+                    truck.length_m ??
+                    truck.length ??
+                    0,
 
                 widthM:
-                    truck.width_m ?? truck.width ?? 0,
+                    truck.width_m ??
+                    truck.width ??
+                    0,
 
                 heightM:
-                    truck.height_m ?? truck.height ?? 0,
+                    truck.height_m ??
+                    truck.height ??
+                    0,
 
 
                 // ==========================
@@ -150,7 +159,7 @@ async function loadProfiles() {
                 // ==========================
 
                 odometerKm:
-                    truck.odometer_km || 0,
+                    truck.odometer_km ?? 0,
 
                 status:
                     truck.status || "active",
@@ -159,9 +168,7 @@ async function loadProfiles() {
                     truck.last_service_date || null,
 
                 nextServiceDueKm:
-                    truck.next_service_due_km || null
-
-                
+                    truck.next_service_due_km ?? null
 
             }));
 
@@ -219,13 +226,19 @@ function updateProfileDropdown() {
         const option =
             document.createElement("option");
 
-        option.value = profile.id;
+
+        option.value =
+            profile.id;
+
 
         option.textContent =
             `${profile.name} - ${profile.registration}`;
 
+
         dropdown.appendChild(option);
+
     });
+
 }
 
 
@@ -247,9 +260,11 @@ document
 
                 selectedProfile = null;
 
+
                 document
                     .getElementById("truckInfoPanel")
                     .style.display = "none";
+
 
                 return;
             }
@@ -262,9 +277,14 @@ document
                 );
 
 
-            displayProfile(
-                selectedProfile
-            );
+            if (selectedProfile) {
+
+                displayProfile(
+                    selectedProfile
+                );
+
+            }
+
         }
     );
 
@@ -274,6 +294,11 @@ document
 // ===============================
 
 function displayProfile(profile) {
+
+    if (!profile) {
+        return;
+    }
+
 
     document
         .getElementById("truckInfoPanel")
@@ -330,25 +355,33 @@ function displayProfile(profile) {
 
     setText(
         "truckWeight",
-        formatNumber(profile.grossVehicleWeightKg) + " kg"
+        formatNumber(
+            profile.grossVehicleWeightKg
+        ) + " kg"
     );
 
 
     setText(
         "truckPayload",
-        formatNumber(profile.payloadCapacityKg) + " kg"
+        formatNumber(
+            profile.payloadCapacityKg
+        ) + " kg"
     );
 
 
     setText(
         "truckEnginePower",
-        formatNumber(profile.enginePowerKw) + " kW"
+        formatNumber(
+            profile.enginePowerKw
+        ) + " kW"
     );
 
 
     setText(
         "truckFuel",
-        formatNumber(profile.fuelTankCapacityL) + " L"
+        formatNumber(
+            profile.fuelTankCapacityL
+        ) + " L"
     );
 
 
@@ -365,24 +398,28 @@ function displayProfile(profile) {
 
 
     setText(
-    "truckLength",
-    `${profile.lengthM} m`
+        "truckLength",
+        `${profile.lengthM || 0} m`
     );
+
 
     setText(
         "truckWidth",
-        `${profile.widthM} m`
+        `${profile.widthM || 0} m`
     );
+
 
     setText(
         "truckHeight",
-        `${profile.heightM} m`
+        `${profile.heightM || 0} m`
     );
 
 
     setText(
         "truckOdometer",
-        formatNumber(profile.odometerKm) + " km"
+        formatNumber(
+            profile.odometerKm
+        ) + " km"
     );
 
 
@@ -390,10 +427,11 @@ function displayProfile(profile) {
         "truckNextService",
         profile.nextServiceDueKm !== null &&
         profile.nextServiceDueKm !== undefined
-            ? formatNumber(profile.nextServiceDueKm) + " km"
+            ? formatNumber(
+                profile.nextServiceDueKm
+            ) + " km"
             : "Not set"
     );
-
 
 }
 
@@ -406,6 +444,7 @@ function setText(id, value) {
 
     const element =
         document.getElementById(id);
+
 
     if (element) {
 
@@ -429,6 +468,7 @@ function formatNumber(value) {
 
     }
 
+
     return Number(value).toLocaleString();
 
 }
@@ -442,11 +482,13 @@ function formatEnum(value) {
 
     }
 
+
     return value
         .replace(/_/g, " ")
         .replace(/\b\w/g, char =>
             char.toUpperCase()
         );
+
 }
 
 
@@ -471,6 +513,7 @@ document
             document
                 .getElementById("newTruckName")
                 .focus();
+
         }
     );
 
@@ -494,10 +537,13 @@ document
 function closeModal() {
 
     modal.style.display = "none";
+
 }
 
 
-// Close modal when clicking outside it
+// ===============================
+// CLOSE MODAL OUTSIDE
+// ===============================
 
 modal.addEventListener(
     "click",
@@ -528,56 +574,73 @@ document
 function updateDimensionLimits() {
 
     const vehicleType =
-        document.getElementById("newVehicleType").value;
+        document
+            .getElementById("newVehicleType")
+            .value;
 
 
     const lengthInput =
-        document.getElementById("newLength");
+        document
+            .getElementById("newLength");
 
 
     const widthInput =
-        document.getElementById("newWidth");
+        document
+            .getElementById("newWidth");
 
 
     const heightInput =
-        document.getElementById("newHeight");
+        document
+            .getElementById("newHeight");
 
 
     const limitText =
-        document.getElementById("dimensionLimitText");
+        document
+            .getElementById("dimensionLimitText");
 
 
     const lengthLimit =
-        document.getElementById("lengthLimit");
+        document
+            .getElementById("lengthLimit");
 
 
     const widthLimit =
-        document.getElementById("widthLimit");
+        document
+            .getElementById("widthLimit");
 
 
     const heightLimit =
-        document.getElementById("heightLimit");
+        document
+            .getElementById("heightLimit");
 
 
     if (!legalLimits[vehicleType]) {
 
         lengthInput.max = "22";
+
         widthInput.max = "2.6";
+
         heightInput.max = "4.3";
+
 
         limitText.textContent =
             "Select a vehicle type to view the applicable limits.";
 
+
         lengthLimit.textContent =
             "Select vehicle type first.";
+
 
         widthLimit.textContent =
             "Maximum: 2.6 m";
 
+
         heightLimit.textContent =
             "Maximum: 4.3 m";
 
+
         return;
+
     }
 
 
@@ -617,6 +680,7 @@ function updateDimensionLimits() {
 
 
     validateDimensions();
+
 }
 
 
@@ -643,7 +707,9 @@ function updateDimensionLimits() {
 function validateDimensions() {
 
     const vehicleType =
-        document.getElementById("newVehicleType").value;
+        document
+            .getElementById("newVehicleType")
+            .value;
 
 
     if (!legalLimits[vehicleType]) {
@@ -659,32 +725,41 @@ function validateDimensions() {
 
     const length =
         Number(
-            document.getElementById("newLength").value
+            document
+                .getElementById("newLength")
+                .value
         );
 
 
     const width =
         Number(
-            document.getElementById("newWidth").value
+            document
+                .getElementById("newWidth")
+                .value
         );
 
 
     const height =
         Number(
-            document.getElementById("newHeight").value
+            document
+                .getElementById("newHeight")
+                .value
         );
 
 
     const lengthInput =
-        document.getElementById("newLength");
+        document
+            .getElementById("newLength");
 
 
     const widthInput =
-        document.getElementById("newWidth");
+        document
+            .getElementById("newWidth");
 
 
     const heightInput =
-        document.getElementById("newHeight");
+        document
+            .getElementById("newHeight");
 
 
     lengthInput.setCustomValidity(
@@ -713,6 +788,7 @@ function validateDimensions() {
         width <= limits.width &&
         height <= limits.height
     );
+
 }
 
 
@@ -722,37 +798,64 @@ function validateDimensions() {
 
 document
     .getElementById("saveProfileButton")
-    .addEventListener("click", saveProfile);
+    .addEventListener(
+        "click",
+        saveProfile
+    );
 
 
 async function saveProfile() {
-
-    console.log("Save Profile button clicked.");
 
     // ===============================
     // IDENTIFICATION
     // ===============================
 
     const vin =
-        document.getElementById("newVin").value.trim();
+        document
+            .getElementById("newVin")
+            .value
+            .trim();
+
 
     const fleetNumber =
-        document.getElementById("newFleetNumber").value.trim();
+        document
+            .getElementById("newFleetNumber")
+            .value
+            .trim();
+
 
     const name =
-        document.getElementById("newTruckName").value.trim();
+        document
+            .getElementById("newTruckName")
+            .value
+            .trim();
+
 
     const registration =
-        document.getElementById("newRegistration").value.trim();
+        document
+            .getElementById("newRegistration")
+            .value
+            .trim();
+
 
     const make =
-        document.getElementById("newMake").value.trim();
+        document
+            .getElementById("newMake")
+            .value
+            .trim();
+
 
     const model =
-        document.getElementById("newModel").value.trim();
+        document
+            .getElementById("newModel")
+            .value
+            .trim();
+
 
     const year =
-        document.getElementById("newYear").value;
+        document
+            .getElementById("newYear")
+            .value;
 
 
     // ===============================
@@ -760,27 +863,45 @@ async function saveProfile() {
     // ===============================
 
     const fuelType =
-        document.getElementById("newFuelType").value;
+        document
+            .getElementById("newFuelType")
+            .value;
 
-    // IMPORTANT:
-    // These IDs match your HTML
+
     const grossVehicleWeight =
-        document.getElementById("newWeight").value;
+        document
+            .getElementById("newWeight")
+            .value;
+
 
     const payloadCapacity =
-        document.getElementById("newPayload").value;
+        document
+            .getElementById("newPayload")
+            .value;
+
 
     const enginePower =
-        document.getElementById("newEnginePower").value;
+        document
+            .getElementById("newEnginePower")
+            .value;
+
 
     const fuelTankCapacity =
-        document.getElementById("newFuel").value;
+        document
+            .getElementById("newFuel")
+            .value;
+
 
     const axleCount =
-        document.getElementById("newAxleCount").value;
+        document
+            .getElementById("newAxleCount")
+            .value;
+
 
     const vehicleType =
-        document.getElementById("newVehicleType").value;
+        document
+            .getElementById("newVehicleType")
+            .value;
 
 
     // ===============================
@@ -788,13 +909,21 @@ async function saveProfile() {
     // ===============================
 
     const length =
-        document.getElementById("newLength").value;
+        document
+            .getElementById("newLength")
+            .value;
+
 
     const width =
-        document.getElementById("newWidth").value;
+        document
+            .getElementById("newWidth")
+            .value;
+
 
     const height =
-        document.getElementById("newHeight").value;
+        document
+            .getElementById("newHeight")
+            .value;
 
 
     // ===============================
@@ -802,31 +931,27 @@ async function saveProfile() {
     // ===============================
 
     const odometer =
-        document.getElementById("newOdometer").value;
+        document
+            .getElementById("newOdometer")
+            .value;
+
 
     const status =
-        document.getElementById("newStatus").value;
+        document
+            .getElementById("newStatus")
+            .value;
 
-    // These IDs match your HTML
+
     const lastServiceDate =
-        document.getElementById("newLastService").value;
+        document
+            .getElementById("newLastService")
+            .value;
+
 
     const nextServiceDue =
-        document.getElementById("newNextService").value;
-
-
-    // ===============================
-    // VALIDATE DIMENSIONS
-    // ===============================
-
-    if (!validateDimensions()) {
-
-        alert(
-            "One or more vehicle dimensions exceed the legal limit."
-        );
-
-        return;
-    }
+        document
+            .getElementById("newNextService")
+            .value;
 
 
     // ===============================
@@ -859,6 +984,22 @@ async function saveProfile() {
         );
 
         return;
+
+    }
+
+
+    // ===============================
+    // DIMENSION VALIDATION
+    // ===============================
+
+    if (!validateDimensions()) {
+
+        alert(
+            "The truck dimensions exceed the legal limits for the selected vehicle type."
+        );
+
+        return;
+
     }
 
 
@@ -869,7 +1010,9 @@ async function saveProfile() {
     const payload = {
 
         // Identification
-        vin: vin,
+
+        vin:
+            vin,
 
         fleet_number:
             fleetNumber,
@@ -891,6 +1034,7 @@ async function saveProfile() {
 
 
         // Vehicle specifications
+
         fuel_type:
             fuelType,
 
@@ -910,12 +1054,14 @@ async function saveProfile() {
             Number(axleCount),
 
 
-        // Vehicle classification
+        // Vehicle type
+
         vehicle_type:
             vehicleType,
 
 
         // Dimensions
+
         length_m:
             Number(length),
 
@@ -927,6 +1073,7 @@ async function saveProfile() {
 
 
         // Operation
+
         odometer_km:
             Number(odometer),
 
@@ -940,6 +1087,7 @@ async function saveProfile() {
             nextServiceDue
                 ? Number(nextServiceDue)
                 : null
+
     };
 
 
@@ -973,7 +1121,7 @@ async function saveProfile() {
 
 
         // ===============================
-        // HANDLE API ERROR
+        // API ERROR
         // ===============================
 
         if (!response.ok) {
@@ -981,15 +1129,12 @@ async function saveProfile() {
             let errorMessage =
                 "Failed to save truck profile.";
 
+
             try {
 
                 const errorData =
                     await response.json();
 
-                console.error(
-                    "FastAPI error:",
-                    errorData
-                );
 
                 if (errorData.detail) {
 
@@ -1002,25 +1147,34 @@ async function saveProfile() {
                         errorMessage =
                             errorData.detail
                                 .map(error =>
-                                    `${error.loc?.join(".") || "Field"}: ${error.msg}`
+                                    error.msg
                                 )
                                 .join("\n");
 
-                    } else {
+                    }
+
+                    else {
 
                         errorMessage =
                             errorData.detail;
+
                     }
+
                 }
 
-            } catch {
-
-                // Response was not JSON
             }
+
+            catch {
+
+                // Response wasn't JSON
+
+            }
+
 
             throw new Error(
                 errorMessage
             );
+
         }
 
 
@@ -1030,11 +1184,6 @@ async function saveProfile() {
 
         const savedTruck =
             await response.json();
-
-        console.log(
-            "Truck saved by FastAPI:",
-            savedTruck
-        );
 
 
         // ===============================
@@ -1047,26 +1196,27 @@ async function saveProfile() {
                 savedTruck.id,
 
             vin:
-                savedTruck.vin || vin,
+                savedTruck.vin ??
+                vin,
 
             fleetNumber:
-                savedTruck.fleet_number ||
+                savedTruck.fleet_number ??
                 fleetNumber,
 
             name:
-                savedTruck.name ||
+                savedTruck.name ??
                 name,
 
             registration:
-                savedTruck.registration ||
+                savedTruck.registration ??
                 registration,
 
             make:
-                savedTruck.make ||
+                savedTruck.make ??
                 make,
 
             model:
-                savedTruck.model ||
+                savedTruck.model ??
                 model,
 
             year:
@@ -1077,7 +1227,7 @@ async function saveProfile() {
             // Vehicle specifications
 
             fuelType:
-                savedTruck.fuel_type ||
+                savedTruck.fuel_type ??
                 fuelType,
 
             grossVehicleWeightKg:
@@ -1101,10 +1251,10 @@ async function saveProfile() {
                 Number(axleCount),
 
 
-            // Classification
+            // Vehicle type
 
             vehicleType:
-                savedTruck.vehicle_type ||
+                savedTruck.vehicle_type ??
                 vehicleType,
 
 
@@ -1130,7 +1280,7 @@ async function saveProfile() {
                 Number(odometer),
 
             status:
-                savedTruck.status ||
+                savedTruck.status ??
                 status,
 
             lastServiceDate:
@@ -1145,6 +1295,7 @@ async function saveProfile() {
                         ? Number(nextServiceDue)
                         : null
                 )
+
         };
 
 
@@ -1152,12 +1303,16 @@ async function saveProfile() {
         // UPDATE LOCAL STATE
         // ===============================
 
-        truckProfiles.push(profile);
+        truckProfiles.push(
+            profile
+        );
 
 
         localStorage.setItem(
             "truckProfiles",
-            JSON.stringify(truckProfiles)
+            JSON.stringify(
+                truckProfiles
+            )
         );
 
 
@@ -1174,7 +1329,8 @@ async function saveProfile() {
 
         document
             .getElementById("truckProfile")
-            .value = profile.id;
+            .value =
+                profile.id;
 
 
         selectedProfile =
@@ -1185,7 +1341,9 @@ async function saveProfile() {
         // DISPLAY PROFILE
         // ===============================
 
-        displayProfile(profile);
+        displayProfile(
+            profile
+        );
 
 
         // ===============================
@@ -1216,10 +1374,13 @@ async function saveProfile() {
             err
         );
 
+
         alert(
             `Error: ${err.message}`
         );
+
     }
+
 }
 
 
@@ -1248,11 +1409,7 @@ function clearProfileForm() {
         "newHeight",
         "newOdometer",
         "newLastService",
-        "newNextService",
-        "newDriverName",
-        "newDriverLicence",
-        "newDriverPhone",
-        "newNotes"
+        "newNextService"
 
     ];
 
@@ -1261,6 +1418,7 @@ function clearProfileForm() {
 
         const element =
             document.getElementById(id);
+
 
         if (element) {
 
@@ -1310,8 +1468,8 @@ function clearProfileForm() {
 
 
     updateDimensionLimits();
-}
 
+}
 
 
 // ===============================
@@ -1331,19 +1489,22 @@ async function calculateRoute() {
     const start =
         document
             .getElementById("start")
-            .value.trim();
+            .value
+            .trim();
 
 
     const destination =
         document
             .getElementById("destination")
-            .value.trim();
+            .value
+            .trim();
 
 
     const driverName =
         document
             .getElementById("driverName")
-            .value.trim();
+            .value
+            .trim();
 
 
     if (!selectedProfile) {
@@ -1353,6 +1514,7 @@ async function calculateRoute() {
         );
 
         return;
+
     }
 
 
@@ -1363,6 +1525,7 @@ async function calculateRoute() {
         );
 
         return;
+
     }
 
 
@@ -1372,9 +1535,11 @@ async function calculateRoute() {
 
     const routeRequest = {
 
-        start: start,
+        start:
+            start,
 
-        destination: destination,
+        destination:
+            destination,
 
         truck: {
 
@@ -1440,41 +1605,41 @@ async function calculateRoute() {
 
             nextServiceDueKm:
                 selectedProfile.nextServiceDueKm
+
+        },
+
+        driver: {
+
+            name:
+                driverName,
+
+            licence:
+                document
+                    .getElementById("driverLicence")
+                    .value,
+
+            phone:
+                document
+                    .getElementById("driverPhone")
+                    .value,
+
+            drivingHours:
+                Number(
+                    document
+                        .getElementById("driverHours")
+                        .value
+                )
+
         }
 
-        
-
     };
+
 
     console.log(
         "Sending to FastAPI:",
         routeRequest
     );
 
-
-    /*
-        NEXT STEP:
-
-        const response = await fetch(
-            "http://127.0.0.1:8000/route",
-            {
-                method: "POST",
-
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-
-                body:
-                    JSON.stringify(routeRequest)
-            }
-        );
-
-        const route =
-            await response.json();
-
-        drawRoute(route);
-    */
 }
 
 
