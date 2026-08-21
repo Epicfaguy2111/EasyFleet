@@ -62,29 +62,112 @@
                         <strong id="truckName">--</strong>
                     </div>
 
-                    <div class="info-row">
-                        <span>Registration:</span>
-                        <strong id="registration">--</strong>
-                    </div>
 
                     <div class="info-row">
-                        <span>Weight:</span>
+                        <span>Fleet Number:</span>
+                        <strong id="truckFleetNumber">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>VIN:</span>
+                        <strong id="truckVin">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>Make:</span>
+                        <strong id="truckMake">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>Model:</span>
+                        <strong id="truckModel">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>Year:</span>
+                        <strong id="truckYear">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>Fuel Type:</span>
+                        <strong id="truckFuelType">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>Status:</span>
+                        <strong id="truckStatus">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>GVWR:</span>
                         <strong id="truckWeight">--</strong>
                     </div>
 
+
                     <div class="info-row">
-                        <span>Height:</span>
-                        <strong id="truckHeight">--</strong>
+                        <span>Payload:</span>
+                        <strong id="truckPayload">--</strong>
                     </div>
+
+
+                    <div class="info-row">
+                        <span>Engine Power:</span>
+                        <strong id="truckEnginePower">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>Fuel Capacity:</span>
+                        <strong id="truckFuel">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>Axles:</span>
+                        <strong id="truckAxles">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>Vehicle Type:</span>
+                        <strong id="truckVehicleType">--</strong>
+                    </div>
+
 
                     <div class="info-row">
                         <span>Length:</span>
                         <strong id="truckLength">--</strong>
                     </div>
 
+
                     <div class="info-row">
-                        <span>Fuel Capacity:</span>
-                        <strong id="truckFuel">--</strong>
+                        <span>Width:</span>
+                        <strong id="truckWidth">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>Height:</span>
+                        <strong id="truckHeight">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>Odometer:</span>
+                        <strong id="truckOdometer">--</strong>
+                    </div>
+
+
+                    <div class="info-row">
+                        <span>Next Service:</span>
+                        <strong id="truckNextService">--</strong>
                     </div>
 
                 </section>
@@ -206,6 +289,7 @@
                         type="button"
                         id="closeModalButton"
                         class="close-button"
+                        aria-label="Close"
                     >
                         ×
                     </button>
@@ -213,35 +297,24 @@
                 </div>
 
 
-                <!-- TRUCK INFORMATION -->
+                <!-- ============================= -->
+                <!-- BASIC TRUCK INFORMATION -->
+                <!-- ============================= -->
 
-                <h3>Truck Information</h3>
+                <h3>Basic Truck Information</h3>
+
 
                 <div class="form-group">
 
                     <label for="newTruckName">
-                        Truck Name
+                        Truck Name *
                     </label>
 
                     <input
                         type="text"
                         id="newTruckName"
                         placeholder="e.g. Truck 01"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="newRegistration">
-                        Registration Number
-                    </label>
-
-                    <input
-                        type="text"
-                        id="newRegistration"
-                        placeholder="e.g. CA 123456"
+                        required
                     >
 
                 </div>
@@ -251,15 +324,15 @@
 
                     <div class="form-group">
 
-                        <label for="newWeight">
-                            Weight (tons)
+                        <label for="newFleetNumber">
+                            Fleet Number *
                         </label>
 
                         <input
-                            type="number"
-                            id="newWeight"
-                            min="0"
-                            step="0.1"
+                            type="text"
+                            id="newFleetNumber"
+                            placeholder="e.g. FLT-001"
+                            required
                         >
 
                     </div>
@@ -267,18 +340,296 @@
 
                     <div class="form-group">
 
-                        <label for="newHeight">
-                            Height (m)
+                        <label for="newRegistration">
+                            Registration *
+                        </label>
+
+                        <input
+                            type="text"
+                            id="newRegistration"
+                            placeholder="e.g. CA 123456"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="newVin">
+                        VIN *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="newVin"
+                        placeholder="17-character VIN"
+                        minlength="17"
+                        maxlength="17"
+                        required
+                    >
+
+                    <small class="field-help">
+                        VIN must contain exactly 17 characters.
+                    </small>
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="newMake">
+                            Make *
+                        </label>
+
+                        <input
+                            type="text"
+                            id="newMake"
+                            placeholder="e.g. Isuzu"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="newModel">
+                            Model *
+                        </label>
+
+                        <input
+                            type="text"
+                            id="newModel"
+                            placeholder="e.g. FVZ 1400"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="newYear">
+                            Year *
                         </label>
 
                         <input
                             type="number"
-                            id="newHeight"
-                            min="0"
-                            step="0.1"
+                            id="newYear"
+                            min="1900"
+                            max="2026"
+                            step="1"
+                            required
                         >
 
                     </div>
+
+
+                    <div class="form-group">
+
+                        <label for="newFuelType">
+                            Fuel Type *
+                        </label>
+
+                        <select
+                            id="newFuelType"
+                            required
+                        >
+
+                            <option value="">
+                                Select fuel type
+                            </option>
+
+                            <option value="diesel">
+                                Diesel
+                            </option>
+
+                            <option value="petrol">
+                                Petrol
+                            </option>
+
+                            <option value="electric">
+                                Electric
+                            </option>
+
+                            <option value="hybrid">
+                                Hybrid
+                            </option>
+
+                            <option value="cng">
+                                CNG
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ============================= -->
+                <!-- VEHICLE CLASSIFICATION -->
+                <!-- ============================= -->
+
+                <h3>Vehicle Classification</h3>
+
+
+                <div class="form-group">
+
+                    <label for="newVehicleType">
+                        Vehicle Type *
+                    </label>
+
+                    <select
+                        id="newVehicleType"
+                        required
+                    >
+
+                        <option value="">
+                            Select vehicle type
+                        </option>
+
+                        <option value="single_rigid">
+                            Single Rigid
+                        </option>
+
+                        <option value="articulated">
+                            Articulated
+                        </option>
+
+                        <option value="other_combination">
+                            Other Combination
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="newAxleCount">
+                            Axle Count *
+                        </label>
+
+                        <input
+                            type="number"
+                            id="newAxleCount"
+                            min="1"
+                            step="1"
+                            value="2"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="newEnginePower">
+                            Engine Power (kW) *
+                        </label>
+
+                        <input
+                            type="number"
+                            id="newEnginePower"
+                            min="0"
+                            step="0.1"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- ============================= -->
+                <!-- WEIGHT -->
+                <!-- ============================= -->
+
+                <h3>Weight & Capacity</h3>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="newWeight">
+                            GVWR (kg) *
+                        </label>
+
+                        <input
+                            type="number"
+                            id="newWeight"
+                            min="0"
+                            step="1"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="newPayload">
+                            Payload Capacity (kg) *
+                        </label>
+
+                        <input
+                            type="number"
+                            id="newPayload"
+                            min="0"
+                            step="1"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="newFuel">
+                        Fuel Tank Capacity (L) *
+                    </label>
+
+                    <input
+                        type="number"
+                        id="newFuel"
+                        min="0"
+                        step="0.1"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- ============================= -->
+                <!-- DIMENSIONS -->
+                <!-- ============================= -->
+
+                <h3>Vehicle Dimensions</h3>
+
+
+                <div class="legal-limit-box">
+
+                    <strong>Legal Dimensional Limits</strong>
+
+                    <p id="dimensionLimitText">
+                        Select a vehicle type to view the applicable limits.
+                    </p>
 
                 </div>
 
@@ -288,7 +639,7 @@
                     <div class="form-group">
 
                         <label for="newLength">
-                            Length (m)
+                            Length (m) *
                         </label>
 
                         <input
@@ -296,6 +647,91 @@
                             id="newLength"
                             min="0"
                             step="0.1"
+                            required
+                        >
+
+                        <small
+                            id="lengthLimit"
+                            class="field-help"
+                        >
+                            Select vehicle type first.
+                        </small>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="newWidth">
+                            Width (m) *
+                        </label>
+
+                        <input
+                            type="number"
+                            id="newWidth"
+                            min="0"
+                            max="2.6"
+                            step="0.1"
+                            required
+                        >
+
+                        <small
+                            id="widthLimit"
+                            class="field-help"
+                        >
+                            Maximum: 2.6 m
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="newHeight">
+                        Height (m) *
+                    </label>
+
+                    <input
+                        type="number"
+                        id="newHeight"
+                        min="0"
+                        max="4.3"
+                        step="0.1"
+                        required
+                    >
+
+                    <small
+                        id="heightLimit"
+                        class="field-help"
+                    >
+                        Maximum: 4.3 m
+                    </small>
+
+                </div>
+
+
+                <!-- ============================= -->
+                <!-- VEHICLE STATUS -->
+                <!-- ============================= -->
+
+                <h3>Vehicle Status & Maintenance</h3>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="newOdometer">
+                            Odometer (km) *
+                        </label>
+
+                        <input
+                            type="number"
+                            id="newOdometer"
+                            min="0"
+                            step="1"
+                            required
                         >
 
                     </div>
@@ -303,66 +739,68 @@
 
                     <div class="form-group">
 
-                        <label for="newFuel">
-                            Fuel Capacity (L)
+                        <label for="newStatus">
+                            Status *
                         </label>
 
-                        <input
-                            type="number"
-                            id="newFuel"
-                            min="0"
+                        <select
+                            id="newStatus"
+                            required
                         >
+
+                            <option value="active">
+                                Active
+                            </option>
+
+                            <option value="in_maintenance">
+                                In Maintenance
+                            </option>
+
+                            <option value="out_of_service">
+                                Out of Service
+                            </option>
+
+                            <option value="retired">
+                                Retired
+                            </option>
+
+                        </select>
 
                     </div>
 
                 </div>
 
 
-                <!-- DRIVER INFORMATION -->
+                <div class="form-row">
 
-                <h3>Default Driver</h3>
+                    <div class="form-group">
 
-                <div class="form-group">
+                        <label for="newLastService">
+                            Last Service Date
+                        </label>
 
-                    <label for="newDriverName">
-                        Driver Name
-                    </label>
+                        <input
+                            type="date"
+                            id="newLastService"
+                        >
 
-                    <input
-                        type="text"
-                        id="newDriverName"
-                        placeholder="Enter driver's name"
-                    >
-
-                </div>
+                    </div>
 
 
-                <div class="form-group">
+                    <div class="form-group">
 
-                    <label for="newDriverLicence">
-                        Licence Number
-                    </label>
+                        <label for="newNextService">
+                            Next Service Due (km)
+                        </label>
 
-                    <input
-                        type="text"
-                        id="newDriverLicence"
-                        placeholder="Enter licence number"
-                    >
+                        <input
+                            type="number"
+                            id="newNextService"
+                            min="0"
+                            step="1"
+                        >
 
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="newDriverPhone">
-                        Contact Number
-                    </label>
-
-                    <input
-                        type="tel"
-                        id="newDriverPhone"
-                        placeholder="Enter contact number"
-                    >
+                    </div>
 
                 </div>
 
