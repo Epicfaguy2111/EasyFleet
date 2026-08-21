@@ -11,9 +11,13 @@ Base.metadata.create_all(bind=engine)
 router = APIRouter(prefix="/trucks", tags=["Trucks"])
 
 
+@router.get("/", response_model=List[TruckResponse])
+def get_all_trucks(db: Session = Depends(get_db)):
+    return db.query(TruckDB).all()
+
+
 @router.post("/", response_model=TruckResponse)
 def create_truck(truck: TruckCreate, db: Session = Depends(get_db)):
-    # Check if registration already exists
     existing = (
         db.query(TruckDB)
         .filter(TruckDB.registration == truck.registration)
@@ -39,8 +43,3 @@ def create_truck(truck: TruckCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_truck)
     return db_truck
-
-
-@router.get("/", response_model=List[TruckResponse])
-def get_all_trucks(db: Session = Depends(get_db)):
-    return db.query(TruckDB).all()
