@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyFleet | Route Display</title>
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: Arial, sans-serif;
+            color: #1f2937;
+            background: #f3f4f6;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        header {
+            padding: 16px 24px;
+            color: white;
+            background: #1f2937;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: minmax(280px, 360px) 1fr;
+            gap: 16px;
+            min-height: calc(100vh - 60px);
+            padding: 16px;
+        }
+
+        .panel {
+            padding: 18px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+
+        .panel h2 {
+            margin: 0 0 16px;
+            font-size: 20px;
+        }
+
+        label {
+            display: block;
+            margin: 14px 0 6px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            font: inherit;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 18px;
+            padding: 11px 14px;
+            border: 0;
+            border-radius: 5px;
+            color: white;
+            background: #2563eb;
+            font: inherit;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            background: #93c5fd;
+            cursor: wait;
+        }
+
+        #status {
+            min-height: 22px;
+            margin: 14px 0 0;
+            color: #b91c1c;
+            font-size: 14px;
+        }
+
+        #status.success {
+            color: #166534;
+        }
+
+        #routeInfo {
+            display: none;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        #routeInfo p {
+            margin: 8px 0;
+        }
+
+        #routeOptions {
+            display: grid;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .route-option {
+            width: 100%;
+            margin: 0;
+            padding: 10px;
+            color: #1f2937;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            text-align: left;
+        }
+
+        .route-option:hover,
+        .route-option.selected {
+            color: white;
+            background: #2563eb;
+        }
+
+        #map {
+            min-height: 520px;
+            height: calc(100vh - 92px);
+            border-radius: 8px;
+        }
+
+        @media (max-width: 720px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+
+            #map {
+                height: 65vh;
+                min-height: 380px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>EasyFleet</h1>
+    </header>
+
+    <main>
+        <section class="panel">
+            <h2>Plan Route</h2>
+            <form id="routeForm">
+                <label for="truckProfile">Truck profile</label>
+                <select id="truckProfile" name="truckProfile">
+                    <option value="">Loading truck profiles...</option>
+                </select>
+
+                <!-- ROUTE INFORMATION -->
+<section class="panel">
+
+    <h3>Route</h3>
+
+    <div class="form-group location-field">
+        <label for="start">
+            Starting Location
+        </label>
+        <input
+            type="text"
+            id="start"
+            placeholder="Start typing an address..."
+            autocomplete="off"
+        >
+        <ul id="start-suggestions" class="suggestions-list"></ul>
+    </div>
+
+    <div class="form-group location-field">
+        <label for="destination">
+            Destination
+        </label>
+        <input
+            type="text"
+            id="destination"
+            placeholder="Start typing an address..."
+            autocomplete="off"
+        >
+        <ul id="destination-suggestions" class="suggestions-list"></ul>
+    </div>
+
+    <button id="routeButton" class="primary-button">Calculate Route</button>
+
+</section>
+
+<style>
+    .location-field {
+        position: relative;
+    }
+
+    .suggestions-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-top: none;
+        max-height: 260px;
+        overflow-y: auto;
+        z-index: 10;
+        display: none;
+    }
+
+    .suggestions-list.visible {
+        display: block;
+    }
+
+    .suggestions-list li {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+
+    .suggestions-list li:hover,
+    .suggestions-list li.active {
+        background: #f0f0f0;
+    }
+
+    .suggestions-list li strong {
+        color: #2563eb;
+    }
+
+    .suggestions-list li.suggestion-loading {
+        color: #888;
+        font-style: italic;
+        cursor: default;
+    }
+
+    .suggestions-list li.suggestion-empty {
+        color: #888;
+        cursor: default;
+    }
+</style>
+
+<script>
+    (function () {
+        // Live address search via OpenStreetMap Nominatim.
+        // Free, no API key needed. For production traffic, respect Nominatim's
+        // usage policy (max ~1 request/sec) or switch to a paid provider
+        // (Google Places, Mapbox, HERE) for higher volume / better accuracy.
+        async function searchAddresses(query) {
+            const url =
+                "https://nominatim.openstreetmap.org/search?format=json&addressdetails=0&limit=6&countrycodes=za&q=" +
+                encodeURIComponent(query);
+
+            const response = await fetch(url, {
+                headers: { "Accept": "application/json" }
+            });
+
+            if (!response.ok) return [];
+            const data = await response.json();
+            return data.map(item => item.display_name);
+        }
+
+        function highlightMatch(text, query) {
+            const idx = text.toLowerCase().indexOf(query.toLowerCase());
+            if (idx === -1) return text;
+            return (
+                text.slice(0, idx) +
+                "<strong>" + text.slice(idx, idx + query.length) + "</strong>" +
+                text.slice(idx + query.length)
+            );
+        }
+
+        /**
+         * Attaches live predictive-address search to a text input.
+         * @param {string} inputId - id of the <input>
+         * @param {string} listId - id of the <ul> used to render suggestions
+         */
+        function attachLocationAutocomplete(inputId, listId) {
+            const input = document.getElementById(inputId);
+            const list = document.getElementById(listId);
+            let activeIndex = -1;
+            let debounceTimer = null;
+            let requestCounter = 0;
+
+            function clearList() {
+                list.innerHTML = "";
+                list.classList.remove("visible");
+                activeIndex = -1;
+            }
+
+            function showLoading() {
+                list.innerHTML = "";
+                const li = document.createElement("li");
+                li.className = "suggestion-loading";
+                li.textContent = "Searching...";
+                list.appendChild(li);
+                list.classList.add("visible");
+            }
+
+            function showEmpty() {
+                list.innerHTML = "";
+                const li = document.createElement("li");
+                li.className = "suggestion-empty";
+                li.textContent = "No matches found";
+                list.appendChild(li);
+                list.classList.add("visible");
+            }
+
+            function renderMatches(query, matches) {
+                list.innerHTML = "";
+                activeIndex = -1;
+
+                if (matches.length === 0) {
+                    showEmpty();
+                    return;
+                }
+
+                matches.forEach(match => {
+                    const li = document.createElement("li");
+                    li.innerHTML = highlightMatch(match, query);
+                    li.addEventListener("click", () => {
+                        input.value = match;
+                        clearList();
+                    });
+                    list.appendChild(li);
+                });
+
+                list.classList.add("visible");
+            }
+
+            async function handleQuery(query) {
+                showLoading();
+                const requestId = ++requestCounter;
+
+                try {
+                    const matches = await searchAddresses(query);
+                    if (requestId !== requestCounter) return; // stale response, ignore
+                    renderMatches(query, matches);
+                } catch (err) {
+                    if (requestId !== requestCounter) return;
+                    showEmpty();
+                }
+            }
+
+            input.addEventListener("input", () => {
+                const query = input.value.trim();
+                clearTimeout(debounceTimer);
+
+                if (query.length < 3) {
+                    clearList();
+                    return;
+                }
+
+                // Debounce to avoid a request on every single keystroke.
+                debounceTimer = setTimeout(() => handleQuery(query), 350);
+            });
+
+            input.addEventListener("keydown", (e) => {
+                const items = list.querySelectorAll("li:not(.suggestion-loading):not(.suggestion-empty)");
+                if (!items.length) return;
+
+                if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    activeIndex = (activeIndex + 1) % items.length;
+                } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    activeIndex = (activeIndex - 1 + items.length) % items.length;
+                } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (activeIndex >= 0) items[activeIndex].click();
+                    return;
+                } else if (e.key === "Escape") {
+                    clearList();
+                    return;
+                } else {
+                    return;
+                }
+
+                items.forEach((item, i) => item.classList.toggle("active", i === activeIndex));
+            });
+
+            document.addEventListener("click", (e) => {
+                if (e.target !== input) clearList();
+            });
+        }
+
+        // Attach the same predictive behaviour to both fields.
+        attachLocationAutocomplete("start", "start-suggestions");
+        attachLocationAutocomplete("destination", "destination-suggestions");
+    })();
+</script>
+
+                <button id="routeButton" type="submit">Calculate Route</button>
+            </form>
+
+            <p id="status" role="status" aria-live="polite"></p>
+            <div id="routeInfo" aria-live="polite">
+                <p><strong>Distance:</strong> <span id="distance">--</span></p>
+                <p><strong>Estimated travel time:</strong> <span id="duration">--</span></p>
+                <p><strong>Estimated arrival:</strong> <span id="eta">--</span></p>
+                <div id="routeOptions" aria-label="Available routes"></div>
+            </div>
+        </section>
+
+        <div id="map" aria-label="Route map"></div>
+    </main>
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
+    <script>
+        const map = L.map("map").setView([-33.9249, 18.4241], 10);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        let routeLayers = [];
+        let markers = [];
+        let routeResults = [];
+        let truckProfiles = [];
+
+        const form = document.getElementById("routeForm");
+        const button = document.getElementById("routeButton");
+        const status = document.getElementById("status");
+        const routeInfo = document.getElementById("routeInfo");
+        const truckProfileSelect = document.getElementById("truckProfile");
+
+        function setStatus(message, isSuccess) {
+            status.textContent = message;
+            status.classList.toggle("success", Boolean(isSuccess));
+        }
+
+        async function geocode(query) {
+            const url = new URL("https://nominatim.openstreetmap.org/search");
+            url.search = new URLSearchParams({
+                q: query,
+                format: "jsonv2",
+                limit: "1"
+            });
+
+            const response = await fetch(url, {
+                headers: { Accept: "application/json" }
+            });
+            if (!response.ok) {
+                throw new Error("The location search service is unavailable.");
+            }
+
+            const results = await response.json();
+            if (!results.length) {
+                throw new Error(`Could not find "${query}".`);
+            }
+
+            return {
+                name: results[0].display_name,
+                lat: Number(results[0].lat),
+                lon: Number(results[0].lon)
+            };
+        }
+
+        async function loadTruckProfiles() {
+            try {
+                const response = await fetch("http://127.0.0.1:8000/trucks/");
+                if (!response.ok) {
+                    throw new Error("Could not load truck profiles.");
+                }
+
+                const trucks = await response.json();
+                truckProfiles = trucks.map(truck => ({
+                    id: truck.id,
+                    name: truck.name,
+                    registration: truck.registration,
+                    weight: truck.weight,
+                    height: truck.height,
+                    length: truck.length,
+                    fuel: truck.fuel,
+                    driver: truck.driver || {
+                        name: truck.driver_name || "",
+                        licence: truck.driver_licence || "",
+                        phone: truck.driver_phone || ""
+                    }
+                }));
+
+                truckProfileSelect.replaceChildren();
+                const defaultOption = document.createElement("option");
+                defaultOption.value = "";
+                defaultOption.textContent = "-- Select Truck Profile --";
+                truckProfileSelect.appendChild(defaultOption);
+
+                truckProfiles.forEach(profile => {
+                    const option = document.createElement("option");
+                    option.value = profile.id;
+                    option.textContent = `${profile.name} - ${profile.registration}`;
+                    truckProfileSelect.appendChild(option);
+                });
+            } catch (error) {
+                truckProfileSelect.replaceChildren();
+                const option = document.createElement("option");
+                option.value = "";
+                option.textContent = "Profiles unavailable";
+                truckProfileSelect.appendChild(option);
+                setStatus("Truck profiles could not be loaded. Start the backend API to use them.");
+            }
+        }
+
+        function createTruckPopup(profile) {
+            const content = document.createElement("div");
+            const heading = document.createElement("strong");
+            heading.textContent = profile.name;
+            content.appendChild(heading);
+            content.appendChild(document.createElement("br"));
+            content.appendChild(document.createTextNode(`Registration: ${profile.registration}`));
+            content.appendChild(document.createElement("br"));
+            content.appendChild(document.createTextNode(`Weight: ${profile.weight} tons`));
+            content.appendChild(document.createElement("br"));
+            content.appendChild(document.createTextNode(`Fuel capacity: ${profile.fuel} L`));
+            if (profile.driver.name) {
+                content.appendChild(document.createElement("br"));
+                content.appendChild(document.createTextNode(`Driver: ${profile.driver.name}`));
+            }
+            return content;
+        }
+
+        function formatDuration(seconds) {
+            const minutes = Math.round(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+            return hours ? `${hours} hr ${remainingMinutes} min` : `${remainingMinutes} min`;
+        }
+
+        function formatEta(durationSeconds) {
+            const arrival = new Date(Date.now() + durationSeconds * 1000);
+            return arrival.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+        }
+
+        function clearRoute() {
+            routeLayers.forEach(layer => map.removeLayer(layer));
+            routeLayers = [];
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+            routeResults = [];
+            document.getElementById("routeOptions").replaceChildren();
+        }
+
+        function displayRouteDetails(index) {
+            const route = routeResults[index];
+            document.getElementById("distance").textContent = `${(route.distance / 1000).toFixed(1)} km`;
+            document.getElementById("duration").textContent = formatDuration(route.duration);
+            document.getElementById("eta").textContent = formatEta(route.duration);
+
+            routeLayers.forEach((layer, layerIndex) => {
+                layer.setStyle({
+                    color: layerIndex === index ? "#2563eb" : "#64748b",
+                    weight: layerIndex === index ? 6 : 4,
+                    opacity: layerIndex === index ? 0.9 : 0.55,
+                    dashArray: layerIndex === index ? null : "10 8"
+                });
+            });
+
+            document.querySelectorAll(".route-option").forEach((option, optionIndex) => {
+                option.classList.toggle("selected", optionIndex === index);
+            });
+        }
+
+        function createRouteOptions() {
+            const container = document.getElementById("routeOptions");
+            routeResults.forEach((route, index) => {
+                const option = document.createElement("button");
+                option.type = "button";
+                option.className = "route-option";
+                option.textContent = `Route ${index + 1} - ${(route.distance / 1000).toFixed(1)} km, ${formatDuration(route.duration)} - ETA ${formatEta(route.duration)}`;
+                option.addEventListener("click", () => displayRouteDetails(index));
+                container.appendChild(option);
+            });
+        }
+
+        function createPopup(title, locationName) {
+            const content = document.createElement("div");
+            const heading = document.createElement("strong");
+            heading.textContent = title;
+            content.appendChild(heading);
+            content.appendChild(document.createElement("br"));
+            content.appendChild(document.createTextNode(locationName));
+            return content;
+        }
+
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+            const startQuery = document.getElementById("start").value.trim();
+            const destinationQuery = document.getElementById("destination").value.trim();
+
+            if (!startQuery || !destinationQuery) {
+                setStatus("Enter both a starting location and a destination.");
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = "Calculating...";
+            routeInfo.style.display = "none";
+            setStatus("Finding locations...");
+            clearRoute();
+
+            try {
+                const [start, destination] = await Promise.all([
+                    geocode(startQuery),
+                    geocode(destinationQuery)
+                ]);
+                const routeUrl = `https://router.project-osrm.org/route/v1/driving/${start.lon},${start.lat};${destination.lon},${destination.lat}?alternatives=true&overview=full&geometries=geojson`;
+                const response = await fetch(routeUrl);
+                if (!response.ok) {
+                    throw new Error("The routing service is unavailable.");
+                }
+
+                const data = await response.json();
+                if (data.code !== "Ok" || !data.routes.length) {
+                    throw new Error("No drivable route could be found.");
+                }
+
+                routeResults = data.routes.slice(0, 3);
+                routeLayers = routeResults.map(route => L.geoJSON(route.geometry).addTo(map));
+                markers = [
+                    L.marker([start.lat, start.lon]).addTo(map).bindPopup(createPopup("Start", start.name)),
+                    L.marker([destination.lat, destination.lon]).addTo(map).bindPopup(createPopup("Destination", destination.name))
+                ];
+                const selectedProfile = truckProfiles.find(
+                    profile => String(profile.id) === truckProfileSelect.value
+                );
+                if (selectedProfile) {
+                    const truckMarker = L.marker([start.lat, start.lon], {
+                        title: selectedProfile.name
+                    }).addTo(map).bindPopup(createTruckPopup(selectedProfile));
+                    truckMarker.openPopup();
+                    markers.push(truckMarker);
+                }
+                const allRouteBounds = L.featureGroup(routeLayers).getBounds();
+                map.fitBounds(allRouteBounds, { padding: [30, 30] });
+                createRouteOptions();
+                displayRouteDetails(0);
+                routeInfo.style.display = "block";
+                setStatus(`${routeResults.length} route${routeResults.length === 1 ? "" : "s"} displayed successfully.`, true);
+            } catch (error) {
+                setStatus(error.message || "Unable to calculate the route.");
+            } finally {
+                button.disabled = false;
+                button.textContent = "Calculate Route";
+            }
+        });
+
+        loadTruckProfiles();
+    </script>
+</body>
+</html>
