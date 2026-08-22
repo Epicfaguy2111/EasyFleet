@@ -1,3 +1,13 @@
+const API_BASE = window.location.origin;
+const WS_BASE = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
+
+// Use in fetch calls:
+// fetch(`${API_BASE}/trucks/`)
+// fetch(`${API_BASE}/drivers/`)
+
+// Use in WebSocket dispatch:
+// const socket = new WebSocket(`${WS_BASE}/ws/simulate-route`);
+
 <!DOCTYPE html>
 <html lang="en">
 
