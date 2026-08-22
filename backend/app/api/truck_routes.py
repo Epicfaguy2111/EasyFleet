@@ -5,13 +5,21 @@ from app.schemas.truck import TruckCreate, TruckResponse
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+# Create database tables automatically
 Base.metadata.create_all(bind=engine)
+
 router = APIRouter(prefix="/trucks", tags=["Trucks"])
 
 
-@router.post("/", response_model=TruckResponse)
+@router.get("", response_model=List[TruckResponse])
+@router.get("/", response_model=List[TruckResponse], include_in_schema=False)
+def get_all_trucks(db: Session = Depends(get_db)):
+    return db.query(TruckDB).all()
+
+
+@router.post("", response_model=TruckResponse)
+@router.post("/", response_model=TruckResponse, include_in_schema=False)
 def create_truck(truck: TruckCreate, db: Session = Depends(get_db)):
-    # Check if registration already exists
     existing = (
         db.query(TruckDB)
         .filter(
@@ -32,8 +40,3 @@ def create_truck(truck: TruckCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_truck)
     return db_truck
-
-
-@router.get("/", response_model=List[TruckResponse])
-def get_all_trucks(db: Session = Depends(get_db)):
-    return db.query(TruckDB).all()

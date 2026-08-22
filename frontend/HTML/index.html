@@ -4,24 +4,13 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-    <title>EasyFleet</title>
-
-    <meta name="description" content="">
+    <title>EasyFleet | Route Display & Planner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    >
-
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="css/style.css">
 
     <style>
-        /* ===============================
-           ADDRESS AUTOCOMPLETE
-        =============================== */
-
         .location-field {
             position: relative;
         }
@@ -30,21 +19,18 @@
             list-style: none;
             margin: 0;
             padding: 0;
-
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
-
             background: #fff;
             border: 1px solid #ccc;
             border-top: none;
-
-            max-height: 260px;
+            max-height: 240px;
             overflow-y: auto;
-
-            z-index: 100;
+            z-index: 1000;
             display: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .suggestions-list.visible {
@@ -54,33 +40,32 @@
         .suggestions-list li {
             padding: 8px 12px;
             cursor: pointer;
+            font-size: 13px;
+            border-bottom: 1px solid #f3f4f6;
         }
 
         .suggestions-list li:hover,
         .suggestions-list li.active {
-            background: #f0f0f0;
+            background: #eff6ff;
+            color: #2563eb;
         }
 
         .suggestions-list li strong {
             color: #2563eb;
         }
 
-        .suggestions-list li.suggestion-loading {
+        .suggestions-list li.suggestion-loading,
+        .suggestions-list li.suggestion-empty {
             color: #888;
             font-style: italic;
             cursor: default;
         }
 
-        .suggestions-list li.suggestion-empty {
-            color: #888;
-            cursor: default;
-        }
-
         #status {
-            min-height: 22px;
-            margin: 14px 0 0;
+            min-height: 20px;
+            margin: 10px 0 0;
             color: #b91c1c;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         #status.success {
@@ -90,1967 +75,1614 @@
         #routeOptions {
             display: grid;
             gap: 8px;
-            margin-top: 14px;
+            margin-top: 12px;
+        }
+
+        .route-option-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 6px;
         }
 
         .route-option {
-            width: 100%;
+            flex: 1;
             margin: 0;
             padding: 10px;
-
             color: #1f2937;
             background: #eff6ff;
-
             border: 1px solid #bfdbfe;
-
+            border-radius: 6px;
             text-align: left;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
         .route-option:hover,
         .route-option.selected {
             color: white;
             background: #2563eb;
+            border-color: #1d4ed8;
         }
 
-        #eta {
+        .play-simulation-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            margin: 0;
+            padding: 0;
+            background: #10b981;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .play-simulation-btn:hover {
+            background: #059669;
+        }
+
+        .play-simulation-btn.active {
+            background: #ef4444;
+        }
+
+        .truck-sim-marker {
+            font-size: 26px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        /* AI Driver Pre-Trip Score Card */
+        .ai-driver-score-card {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .score-pill {
+            font-size: 15px;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 16px;
+            color: #ffffff;
+            background: #10b981;
+        }
+
+        .score-pill.warning {
+            background: #f59e0b;
+        }
+
+        .score-pill.danger {
+            background: #ef4444;
+        }
+
+        /* Active Missions List (Top Right) */
+        #activeMissionsPanel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 330px;
+            max-height: calc(100vh - 140px);
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e5e7eb;
+        }
+
+        #activeMissionsHeader {
+            background: #1f2937;
+            color: #ffffff;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #activeMissionsHeader span.badge {
+            background: #2563eb;
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        #activeMissionsList {
+            padding: 8px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 440px;
+        }
+
+        .mission-item-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left-width: 5px;
+            border-radius: 6px;
+            padding: 9px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+
+        .mission-item-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+            background: #f1f5f9;
+        }
+
+        .mission-item-card.highlighted {
+            background: #eff6ff;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px #93c5fd;
+        }
+
+        .mission-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mission-header-row strong {
+            color: #0f172a;
+            font-size: 12px;
+        }
+
+        .mission-cancel-btn {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 4px;
+            font-size: 14px;
+            border-radius: 3px;
+        }
+
+        .mission-cancel-btn:hover {
+            background: #fee2e2;
+        }
+
+        .mission-driver-tag-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1px 0;
+        }
+
+        .mission-driver-tag {
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .mission-live-score {
+            font-weight: 700;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: white;
+            background: #10b981;
+        }
+
+        .mission-live-score.warning {
+            background: #f59e0b;
+        }
+
+        .mission-live-score.danger {
+            background: #ef4444;
+        }
+
+        .mission-stats-row {
+            display: flex;
+            justify-content: space-between;
+            color: #475569;
+            font-size: 11px;
+        }
+
+        .mission-emergency-banner {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #fefce8;
+            border: 1px solid #fef08a;
+            color: #854d0e;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 3px;
+            animation: pulse-warning 1.8s infinite;
+        }
+
+        .emergency-icon {
+            font-size: 13px;
+            color: #ca8a04;
+        }
+
+        @keyframes pulse-warning {
+            0%, 100% { background-color: #fefce8; border-color: #fef08a; }
+            50% { background-color: #fef3c7; border-color: #fde047; }
+        }
+
+        /* Detailed Emergency & Evaluation Block in Active Card */
+        .trip-incidents-block {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed #cbd5e1;
+            font-size: 11px;
+        }
+
+        .trip-incidents-title {
+            font-weight: bold;
+            color: #991b1b;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trip-incidents-list {
+            list-style: disc;
+            margin: 0;
+            padding-left: 16px;
+            color: #b45309;
+        }
+
+        .trip-evaluation-summary {
+            margin-top: 6px;
+            padding: 6px 8px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        /* Driver History Violations Panel */
+        .driver-incidents-container {
+            margin-top: 8px;
+            padding: 8px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .incident-badge-tag {
+            display: inline-block;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin: 2px;
+            font-weight: 500;
+        }
+
+        .clean-record-badge {
+            display: inline-block;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
             font-weight: bold;
         }
 
-        /* ===============================
-           DIMENSION LIMITS
-        =============================== */
-
-        .dimension-limit-text {
-            margin: 5px 0 10px;
-            font-size: 13px;
-            color: #666;
-        }
-
-        .dimension-limit {
-            display: block;
-            margin-top: 3px;
+        .no-missions-text {
+            color: #94a3b8;
             font-size: 12px;
-            color: #777;
-        }
-
-        /* =============================== */
-        /* NOTIFICATION POPUP */
-        /* =============================== */
-
-        .notification-popup {
-
-            position: fixed;
-
-            right: 25px;
-            bottom: 25px;
-
-            width: 360px;
-
-            display: flex;
-            align-items: flex-start;
-
-            gap: 12px;
-
-            padding: 16px;
-
-            background: #ffffff;
-
-            border: 1px solid #d1d5db;
-
-            border-radius: 10px;
-
-            box-shadow:
-                0 8px 25px rgba(0, 0, 0, 0.18);
-
-            z-index: 9999;
-
-            opacity: 0;
-
-            transform:
-                translateX(120%);
-
-            pointer-events: none;
-
-            transition:
-                opacity 0.35s ease,
-                transform 0.35s ease;
-        }
-
-
-        /* =============================== */
-        /* VISIBLE */
-        /* =============================== */
-
-        .notification-popup.show {
-
-            opacity: 1;
-
-            transform:
-                translateX(0);
-
-            pointer-events: auto;
-        }
-
-
-        /* =============================== */
-        /* NOTIFICATION ICON */
-        /* =============================== */
-
-        .notification-icon {
-
-            width: 38px;
-            height: 38px;
-
-            min-width: 38px;
-
-            display: flex;
-
-            align-items: center;
-            justify-content: center;
-
-            background: #eff6ff;
-
-            border-radius: 50%;
-
-            font-size: 20px;
-        }
-
-
-        /* =============================== */
-        /* CONTENT */
-        /* =============================== */
-
-        .notification-content {
-
-            flex: 1;
-        }
-
-
-        .notification-content strong {
-
-            display: block;
-
-            margin-bottom: 4px;
-
-            font-size: 15px;
-
-            color: #111827;
-        }
-
-
-        .notification-content p {
-
+            text-align: center;
+            padding: 12px 0;
             margin: 0;
-
-            font-size: 14px;
-
-            line-height: 1.4;
-
-            color: #4b5563;
         }
 
+        /* AI Assistant */
+        #aiAssistant {
+            position: fixed !important;
+            bottom: 24px !important;
+            right: 24px !important;
+            left: auto !important;
+            top: auto !important;
+            z-index: 99999 !important;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
 
-        /* =============================== */
-        /* CLOSE BUTTON */
-        /* =============================== */
-
-        .notification-close {
-
+        #aiAssistantButton {
+            border-radius: 24px;
+            padding: 10px 18px;
+            background: #2563eb;
+            color: white;
             border: none;
-
-            background: transparent;
-
-            color: #6b7280;
-
-            font-size: 22px;
-
-            line-height: 1;
-
             cursor: pointer;
-
-            padding: 0;
-
-            margin-left: 4px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
         }
 
-
-        .notification-close:hover {
-
-            color: #111827;
+        #aiAssistantButton:hover {
+            background: #1d4ed8;
         }
 
+        #aiAssistantWindow {
+            display: none;
+            position: absolute !important;
+            bottom: 50px !important;
+            right: 0 !important;
+            left: auto !important;
+            top: auto !important;
+            width: 340px;
+            height: 430px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #d1d5db;
+            margin-bottom: 8px;
+        }
 
-        /* =============================== */
-        /* MOBILE */
-        /* =============================== */
+        #aiAssistantHeader {
+            background: #1f2937;
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
 
-        @media (max-width: 600px) {
+        #aiAssistantMessages {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 13px;
+        }
 
-            .notification-popup {
+        .ai-message {
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 85%;
+            line-height: 1.4;
+        }
 
-                left: 15px;
-                right: 15px;
+        .ai-message-bot {
+            background: #f1f5f9;
+            color: #1e293b;
+            align-self: flex-start;
+        }
 
-                bottom: 15px;
+        .ai-message-user {
+            background: #2563eb;
+            color: white;
+            align-self: flex-end;
+        }
 
-                width: auto;
-            }
+        #aiAssistantInputArea {
+            display: flex;
+            padding: 8px;
+            border-top: 1px solid #e2e8f0;
+            gap: 6px;
+            background: #ffffff;
+        }
 
+        #aiAssistantInputArea input {
+            flex: 1;
+            padding: 8px 10px;
+            font-size: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+        }
+
+        #aiAssistantInputArea button {
+            width: auto;
+            margin: 0;
+            padding: 8px 14px;
         }
     </style>
 </head>
 
-
 <body>
-
-    <!-- ===============================
-         HEADER
-    =============================== -->
-
     <header>
         <h1>EasyFleet</h1>
     </header>
 
-
-    <!-- ===============================
-         APPLICATION
-    =============================== -->
-
     <div class="application">
-
-        <!-- ===============================
-             SIDEBAR
-        =============================== -->
-
         <aside class="sidebar">
-
             <h2>Plan Route</h2>
 
-
-            <!-- ===============================
-                 TRUCK PROFILE
-            =============================== -->
-
+            <!-- TRUCK PROFILE -->
             <section class="panel">
-
                 <h3>Truck Profile</h3>
-
                 <div class="form-group">
-
-                    <label for="truckProfile">
-                        Select Truck
-                    </label>
-
+                    <label for="truckProfile">Select Truck</label>
                     <select id="truckProfile">
-
-                        <option value="">
-                            -- Select Truck Profile --
-                        </option>
-
+                        <option value="">-- Select Truck Profile --</option>
                     </select>
-
                 </div>
-
-                <button
-                    type="button"
-                    id="createProfileButton"
-                    class="secondary-button"
-                >
+                <button type="button" id="createProfileButton" class="secondary-button">
                     + Create New Profile
                 </button>
-
             </section>
 
-
-            <!-- ===============================
-                 TRUCK INFORMATION
-            =============================== -->
-
-            <section
-                class="panel"
-                id="truckInfoPanel"
-                style="display: none;"
-            >
-
+            <!-- TRUCK INFORMATION PANEL -->
+            <section class="panel" id="truckInfoPanel" style="display: none;">
                 <h3>Truck Information</h3>
-
-
-                <div class="info-row">
-                    <span>Truck:</span>
-                    <strong id="truckName">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Fleet Number:</span>
-                    <strong id="truckFleetNumber">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>VIN:</span>
-                    <strong id="truckVin">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Registration:</span>
-                    <strong id="registration">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Make:</span>
-                    <strong id="truckMake">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Model:</span>
-                    <strong id="truckModel">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Year:</span>
-                    <strong id="truckYear">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Fuel Type:</span>
-                    <strong id="truckFuelType">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Status:</span>
-                    <strong id="truckStatus">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Weight:</span>
-                    <strong id="truckWeight">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Payload:</span>
-                    <strong id="truckPayload">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Engine Power:</span>
-                    <strong id="truckEnginePower">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Fuel Capacity:</span>
-                    <strong id="truckFuel">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Axles:</span>
-                    <strong id="truckAxles">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Vehicle Type:</span>
-                    <strong id="truckVehicleType">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Length:</span>
-                    <strong id="truckLength">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Width:</span>
-                    <strong id="truckWidth">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Height:</span>
-                    <strong id="truckHeight">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Odometer:</span>
-                    <strong id="truckOdometer">--</strong>
-                </div>
-
-
-                <div class="info-row">
-                    <span>Next Service:</span>
-                    <strong id="truckNextService">--</strong>
-                </div>
-
+                <div class="info-row"><span>Truck:</span><strong id="truckName">--</strong></div>
+                <div class="info-row"><span>Fleet Number:</span><strong id="truckFleetNumber">--</strong></div>
+                <div class="info-row"><span>VIN:</span><strong id="truckVin">--</strong></div>
+                <div class="info-row"><span>Registration:</span><strong id="registration">--</strong></div>
+                <div class="info-row"><span>Make & Model:</span><strong id="truckMakeModel">--</strong></div>
+                <div class="info-row"><span>Year:</span><strong id="truckYear">--</strong></div>
+                <div class="info-row"><span>Fuel Type:</span><strong id="truckFuelType">--</strong></div>
+                <div class="info-row"><span>Status:</span><strong id="truckStatus">--</strong></div>
+                <div class="info-row"><span>GVWR:</span><strong id="truckWeight">--</strong></div>
+                <div class="info-row"><span>Payload:</span><strong id="truckPayload">--</strong></div>
+                <div class="info-row"><span>Engine Power:</span><strong id="truckEnginePower">--</strong></div>
+                <div class="info-row"><span>Fuel Capacity:</span><strong id="truckFuel">--</strong></div>
+                <div class="info-row"><span>Axles:</span><strong id="truckAxles">--</strong></div>
+                <div class="info-row"><span>Vehicle Type:</span><strong id="truckVehicleType">--</strong></div>
+                <div class="info-row"><span>Dimensions:</span><strong id="truckDimensions">--</strong></div>
+                <div class="info-row"><span>Odometer:</span><strong id="truckOdometer">--</strong></div>
+                <div class="info-row"><span>Next Service:</span><strong id="truckNextService">--</strong></div>
             </section>
 
-
-            <!-- ===============================
-                 DRIVER INFORMATION
-            =============================== -->
-
+            <!-- DRIVER PROFILE -->
             <section class="panel">
-
-                <h3>Driver Information</h3>
-
-
+                <h3>Driver Profile</h3>
                 <div class="form-group">
-
-                    <label for="driverName">
-                        Driver Name
-                    </label>
-
-                    <input
-                        type="text"
-                        id="driverName"
-                        placeholder="Enter driver's name"
-                    >
-
+                    <label for="driverProfile">Select Driver</label>
+                    <select id="driverProfile">
+                        <option value="">-- Select Driver --</option>
+                    </select>
                 </div>
-
-
-                <div class="form-group">
-
-                    <label for="driverLicence">
-                        Licence Number
-                    </label>
-
-                    <input
-                        type="text"
-                        id="driverLicence"
-                        placeholder="Enter licence number"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="driverHours">
-                        Driving Hours Available
-                    </label>
-
-                    <input
-                        type="number"
-                        id="driverHours"
-                        min="0"
-                        max="24"
-                        step="0.5"
-                        value="9"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="driverPhone">
-                        Contact Number
-                    </label>
-
-                    <input
-                        type="tel"
-                        id="driverPhone"
-                        placeholder="Enter contact number"
-                    >
-
-                </div>
-
-            </section>
-
-
-            <!-- ===============================
-                 ROUTE INFORMATION
-            =============================== -->
-
-            <section class="panel">
-
-                <h3>Route</h3>
-
-
-                <div class="form-group location-field">
-
-                    <label for="start">
-                        Starting Location
-                    </label>
-
-                    <input
-                        type="text"
-                        id="start"
-                        placeholder="Start typing an address..."
-                        autocomplete="off"
-                    >
-
-                    <ul
-                        id="start-suggestions"
-                        class="suggestions-list"
-                    ></ul>
-
-                </div>
-
-
-                <div class="form-group location-field">
-
-                    <label for="destination">
-                        Destination
-                    </label>
-
-                    <input
-                        type="text"
-                        id="destination"
-                        placeholder="Start typing an address..."
-                        autocomplete="off"
-                    >
-
-                    <ul
-                        id="destination-suggestions"
-                        class="suggestions-list"
-                    ></ul>
-
-                </div>
-
-
-                <button
-                    type="button"
-                    id="routeButton"
-                    class="primary-button"
-                >
-                    Calculate Route
+                <button type="button" id="createDriverButton" class="secondary-button">
+                    + Add New Driver
                 </button>
-
-
-                <p
-                    id="status"
-                    role="status"
-                    aria-live="polite"
-                ></p>
-
             </section>
 
+            <!-- DRIVER INFORMATION PANEL WITH AI PRE-TRIP SCORE -->
+            <section class="panel" id="driverInfoPanel" style="display: none;">
+                <h3>Driver Details</h3>
+                <div class="info-row"><span>Driver:</span><strong id="displayDriverName">--</strong></div>
+                <div class="info-row"><span>Licence:</span><strong id="displayDriverLicence">--</strong></div>
+                <div class="info-row"><span>Phone:</span><strong id="displayDriverPhone">--</strong></div>
+                <div class="info-row"><span>Available Hours:</span><strong id="displayDriverHours">--</strong></div>
 
-            <!-- ===============================
-                 ROUTE RESULTS
-            =============================== -->
+                <!-- AI Pre-Trip Performance Assessment -->
+                <div class="ai-driver-score-card">
+                    <div class="score-row">
+                        <span style="font-weight: 700; color: #1e293b;">🤖 AI Pre-Trip Score</span>
+                        <span id="driverPreTripScore" class="score-pill">100 / 100</span>
+                    </div>
+                    <div id="driverPreTripRating" style="font-size: 11px; font-weight: 600; color: #059669; margin-bottom: 4px;">Low Risk</div>
+                    <div id="driverPreTripAssessment" style="font-size: 11px; color: #475569; line-height: 1.4;">Evaluating driver profile...</div>
+                </div>
 
-            <section
-                id="routeInfo"
-                class="panel route-info"
-                style="display: none;"
-            >
+                <div class="driver-incidents-container">
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #1e293b;">Previous Trip Mistakes / Record:</div>
+                    <div id="driverIncidentsList">
+                        <span class="clean-record-badge">✓ Clean Driving Record</span>
+                    </div>
+                </div>
+            </section>
 
+            <!-- ROUTE FORM WITH AUTOCOMPLETE -->
+            <section class="panel">
+                <h3>Route</h3>
+                <div class="form-group location-field">
+                    <label for="start">Starting Location</label>
+                    <input type="text" id="start" placeholder="Start typing an address..." autocomplete="off">
+                    <ul id="start-suggestions" class="suggestions-list"></ul>
+                </div>
+
+                <div class="form-group location-field">
+                    <label for="destination">Destination</label>
+                    <input type="text" id="destination" placeholder="Start typing an address..." autocomplete="off">
+                    <ul id="destination-suggestions" class="suggestions-list"></ul>
+                </div>
+
+                <button type="button" id="routeButton" class="primary-button">Calculate Route</button>
+                <p id="status" role="status" aria-live="polite"></p>
+            </section>
+
+            <!-- ROUTE RESULTS -->
+            <section id="routeInfo" class="panel route-info" style="display: none;">
                 <h3>Route Information</h3>
-
-
-                <p>
-                    <span>Distance:</span>
-                    <span id="distance">--</span>
-                </p>
-
-
-                <p>
-                    <span>Estimated Time:</span>
-                    <span id="duration">--</span>
-                </p>
-
-
-                <p>
-                    <span>Estimated Arrival:</span>
-                    <span id="eta">--</span>
-                </p>
-
-
-                <p>
-                    <span>Fuel Required:</span>
-                    <span id="fuelRequired">--</span>
-                </p>
-
-
-                <div
-                    id="routeOptions"
-                    aria-label="Available routes"
-                ></div>
-
+                <p><span>Distance:</span> <strong id="distance">--</strong></p>
+                <p><span>Estimated Time:</span> <strong id="duration">--</strong></p>
+                <p><span>Estimated Arrival:</span> <strong id="eta">--</strong></p>
+                <p><span>Fuel Required:</span> <strong id="fuelRequired">--</strong></p>
+                <div id="routeOptions" aria-label="Available routes"></div>
             </section>
-
         </aside>
 
-
-        <!-- ===============================
-             MAP
-        =============================== -->
-
-        <main
-            id="map"
-            aria-label="Route map"
-        ></main>
-        
-        <!-- =============================== -->
-        <!-- SELECTED TRUCK MAP INFO -->
-        <!-- =============================== -->
-
-        <div
-            id="selectedTruckCard"
-            class="selected-truck-card"
-            style="display: none;"
-        >
-
-            <div class="truck-card-image">
-                <img
-                    src="images/truck.png"
-                    alt="Truck"
-                    id="selectedTruckImage"
-                >
+        <!-- MAP CONTAINER -->
+        <main id="map" aria-label="Route map" style="position: relative;">
+            <!-- ACTIVE FLEET SIMULATIONS LIST HUD (TOP RIGHT) -->
+            <div id="activeMissionsPanel">
+                <div id="activeMissionsHeader">
+                    <span>Active Routes & Simulations</span>
+                    <span id="activeMissionsCount" class="badge">0</span>
+                </div>
+                <div id="activeMissionsList">
+                    <p class="no-missions-text">No active vehicle simulations.</p>
+                </div>
             </div>
-
-            <div class="truck-card-content">
-
-                <h3 id="selectedTruckName">
-                    Truck
-                </h3>
-
-                <div class="truck-identification">
-
-                    <div>
-                        <span>Registration</span>
-                        <strong id="selectedTruckRegistration">--</strong>
-                    </div>
-
-                    <div>
-                        <span>Fleet No.</span>
-                        <strong id="selectedTruckFleetNumber">--</strong>
-                    </div>
-
-                    <div>
-                        <span>VIN</span>
-                        <strong id="selectedTruckVin">--</strong>
-                    </div>
-
-                    <div>
-                        <span>Vehicle</span>
-                        <strong id="selectedTruckVehicle">--</strong>
-                    </div>
-
-                </div>
-
-                <div class="truck-route-info">
-
-                    <div>
-                        <span>ETA</span>
-                        <strong id="selectedTruckEta">--</strong>
-                    </div>
-
-                    <div>
-                        <span>Travel Time</span>
-                        <strong id="selectedTruckTravelTime">--</strong>
-                    </div>
-
-                    <div>
-                        <span>Avg. Speed</span>
-                        <strong id="selectedTruckSpeed">--</strong>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-        </div>
-
-        <div id="vehicleIcons" class="vehicle-icons" aria-label="Vehicle icons">
-            <div
-                id="vehicleIcon"
-                class="vehicle-icon"
-                title="Truck"
-                aria-label="Truck"
-            >
-                🚛
-            </div>
-        </div>
-
-        <!-- =============================== -->
-        <!-- AI ASSISTANT -->
-        <!-- =============================== -->
-
-        <div id="aiAssistant">
-
-            <!-- AI ACCESS BUTTON -->
-
-            <button
-                type="button"
-                id="aiAssistantButton"
-                title="Open EasyFleet AI Assistant"
-            >
-                🤖
-                <span>AI Assistant</span>
-            </button>
-
-
-            <!-- AI CHAT WINDOW -->
-
-            <div id="aiAssistantWindow">
-
-                <div id="aiAssistantHeader">
-
-                    <div>
-                        <strong>EasyFleet AI</strong>
-                        <small>Fleet Management Assistant</small>
-                    </div>
-
-                    <button
-                        type="button"
-                        id="aiAssistantClose"
-                    >
-                        ×
-                    </button>
-
-                </div>
-
-
-                <div id="aiAssistantMessages">
-
-                    <div class="ai-message ai-message-bot">
-                        Hello! I'm EasyFleet AI. How can I help you with your fleet?
-                    </div>
-
-                </div>
-
-
-                <div id="aiAssistantInputArea">
-
-                    <input
-                        type="text"
-                        id="aiAssistantInput"
-                        placeholder="Ask about your fleet..."
-                        autocomplete="off"
-                    >
-
-                    <button
-                        type="button"
-                        id="aiAssistantSend"
-                    >
-                        Send
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
+        </main>
     </div>
 
-
-    <!-- ===============================
-         CREATE PROFILE MODAL
-    =============================== -->
-
-    <div
-        id="profileModal"
-        class="modal"
-    >
-
-        <div class="modal-content">
-
-
-            <!-- HEADER -->
-
-            <div class="modal-header">
-
-                <h2>Create Truck Profile</h2>
-
-                <button
-                    type="button"
-                    id="closeModalButton"
-                    class="close-button"
-                >
-                    ×
-                </button>
-
+    <!-- AI ASSISTANT (BOTTOM RIGHT) -->
+    <div id="aiAssistant">
+        <div id="aiAssistantWindow">
+            <div id="aiAssistantHeader">
+                <div><strong>EasyFleet AI</strong></div>
+                <button type="button" id="aiAssistantClose" style="background: transparent; border: none; color: white; font-size: 18px; cursor: pointer;">×</button>
             </div>
+            <div id="aiAssistantMessages">
+                <div class="ai-message ai-message-bot">Hello! I am your EasyFleet Assistant. How can I help you today?</div>
+            </div>
+            <div id="aiAssistantInputArea">
+                <input type="text" id="aiAssistantInput" placeholder="Ask a question...">
+                <button type="button" id="aiAssistantSend" class="primary-button">Send</button>
+            </div>
+        </div>
 
+        <button type="button" id="aiAssistantButton">
+            🤖 AI Assistant
+        </button>
+    </div>
 
-            <!-- ===============================
-                 IDENTIFICATION
-            =============================== -->
+    <!-- CREATE TRUCK MODAL -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Truck Profile</h2>
+                <button type="button" id="closeModalButton" class="close-button">×</button>
+            </div>
 
             <h3>Truck Identification</h3>
-
-
-            <div class="form-group">
-
-                <label for="newTruckName">
-                    Truck Name
-                </label>
-
-                <input
-                    type="text"
-                    id="newTruckName"
-                    placeholder="e.g. Truck 01"
-                >
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label for="newFleetNumber">
-                    Fleet Number
-                </label>
-
-                <input
-                    type="text"
-                    id="newFleetNumber"
-                    placeholder="e.g. FL-001"
-                >
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label for="newVin">
-                    VIN
-                </label>
-
-                <input
-                    type="text"
-                    id="newVin"
-                    placeholder="Enter VIN"
-                >
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label for="newRegistration">
-                    Registration Number
-                </label>
-
-                <input
-                    type="text"
-                    id="newRegistration"
-                    placeholder="e.g. CA 123456"
-                >
-
-            </div>
-
-
+            <div class="form-group"><label for="newTruckName">Truck Name *</label><input type="text" id="newTruckName" placeholder="e.g. Truck 02" required></div>
             <div class="form-row">
-
-                <div class="form-group">
-
-                    <label for="newMake">
-                        Make
-                    </label>
-
-                    <input
-                        type="text"
-                        id="newMake"
-                        placeholder="e.g. Volvo"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="newModel">
-                        Model
-                    </label>
-
-                    <input
-                        type="text"
-                        id="newModel"
-                        placeholder="e.g. FH16"
-                    >
-
-                </div>
-
+                <div class="form-group"><label for="newFleetNumber">Fleet Number *</label><input type="text" id="newFleetNumber" placeholder="e.g. FLT-002" required></div>
+                <div class="form-group"><label for="newRegistration">Registration *</label><input type="text" id="newRegistration" placeholder="e.g. CA 654321" required></div>
             </div>
-
-
-            <div class="form-group">
-
-                <label for="newYear">
-                    Year
-                </label>
-
-                <input
-                    type="number"
-                    id="newYear"
-                    min="1900"
-                    max="2100"
-                    placeholder="e.g. 2024"
-                >
-
+            <div class="form-group"><label for="newVin">VIN (17 chars) *</label><input type="text" id="newVin" placeholder="Unique 17-character VIN" maxlength="17" required></div>
+            <div class="form-row">
+                <div class="form-group"><label for="newMake">Make</label><input type="text" id="newMake" placeholder="e.g. Scania"></div>
+                <div class="form-group"><label for="newModel">Model</label><input type="text" id="newModel" placeholder="e.g. R500"></div>
             </div>
-
-
-            <!-- ===============================
-                 VEHICLE SPECIFICATIONS
-            =============================== -->
+            <div class="form-row">
+                <div class="form-group"><label for="newYear">Year</label><input type="number" id="newYear" value="2024"></div>
+                <div class="form-group">
+                    <label for="newFuelType">Fuel Type</label>
+                    <select id="newFuelType">
+                        <option value="diesel">Diesel</option>
+                        <option value="petrol">Petrol</option>
+                        <option value="electric">Electric</option>
+                        <option value="hybrid">Hybrid</option>
+                    </select>
+                </div>
+            </div>
 
             <h3>Vehicle Specifications</h3>
-
-
-            <div class="form-group">
-
-                <label for="newFuelType">
-                    Fuel Type
-                </label>
-
-                <select id="newFuelType">
-
-                    <option value="">
-                        -- Select Fuel Type --
-                    </option>
-
-                    <option value="diesel">
-                        Diesel
-                    </option>
-
-                    <option value="petrol">
-                        Petrol
-                    </option>
-
-                    <option value="electric">
-                        Electric
-                    </option>
-
-                    <option value="hybrid">
-                        Hybrid
-                    </option>
-
-                </select>
-
-            </div>
-
-
             <div class="form-row">
-
-                <div class="form-group">
-
-                    <label for="newWeight">
-                        Gross Vehicle Weight (kg)
-                    </label>
-
-                    <input
-                        type="number"
-                        id="newWeight"
-                        min="0"
-                        step="1"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="newPayload">
-                        Payload Capacity (kg)
-                    </label>
-
-                    <input
-                        type="number"
-                        id="newPayload"
-                        min="0"
-                        step="1"
-                    >
-
-                </div>
-
+                <div class="form-group"><label for="newWeight">GVWR (kg)</label><input type="number" id="newWeight" value="18000"></div>
+                <div class="form-group"><label for="newPayload">Payload (kg)</label><input type="number" id="newPayload" value="11000"></div>
             </div>
-
-
             <div class="form-row">
-
+                <div class="form-group"><label for="newEnginePower">Engine Power (kW)</label><input type="number" id="newEnginePower" value="260"></div>
+                <div class="form-group"><label for="newFuel">Fuel Tank (L)</label><input type="number" id="newFuel" value="350"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label for="newAxleCount">Axles</label><input type="number" id="newAxleCount" value="2"></div>
                 <div class="form-group">
-
-                    <label for="newEnginePower">
-                        Engine Power (kW)
-                    </label>
-
-                    <input
-                        type="number"
-                        id="newEnginePower"
-                        min="0"
-                        step="1"
-                    >
-
+                    <label for="newVehicleType">Vehicle Type</label>
+                    <select id="newVehicleType">
+                        <option value="single_rigid">Single Rigid (12.5m)</option>
+                        <option value="articulated">Articulated (18.5m)</option>
+                        <option value="other_combination">Other Combination (22m)</option>
+                    </select>
                 </div>
-
-
-                <div class="form-group">
-
-                    <label for="newFuel">
-                        Fuel Capacity (L)
-                    </label>
-
-                    <input
-                        type="number"
-                        id="newFuel"
-                        min="0"
-                        step="1"
-                    >
-
-                </div>
-
             </div>
-
-
-            <div class="form-group">
-
-                <label for="newAxleCount">
-                    Axle Count
-                </label>
-
-                <input
-                    type="number"
-                    id="newAxleCount"
-                    min="1"
-                    step="1"
-                    value="2"
-                >
-
-            </div>
-
-
-            <!-- ===============================
-                 VEHICLE TYPE
-            =============================== -->
-
-            <h3>Vehicle Type</h3>
-
-
-            <div class="form-group">
-
-                <label for="newVehicleType">
-                    Vehicle Type
-                </label>
-
-                <select id="newVehicleType">
-
-                    <option value="">
-                        -- Select Vehicle Type --
-                    </option>
-
-                    <option value="single_rigid">
-                        Single Rigid
-                    </option>
-
-                    <option value="articulated">
-                        Articulated
-                    </option>
-
-                    <option value="other_combination">
-                        Other Combination
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <p
-                id="dimensionLimitText"
-                class="dimension-limit-text"
-            >
-                Select a vehicle type to view the applicable limits.
-            </p>
-
-
-            <!-- ===============================
-                 DIMENSIONS
-            =============================== -->
 
             <h3>Dimensions</h3>
-
-
             <div class="form-row">
-
-                <div class="form-group">
-
-                    <label for="newLength">
-                        Length (m)
-                    </label>
-
-                    <input
-                        type="number"
-                        id="newLength"
-                        min="0"
-                        step="0.1"
-                    >
-
-                    <small
-                        id="lengthLimit"
-                        class="dimension-limit"
-                    >
-                        Select vehicle type first.
-                    </small>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="newWidth">
-                        Width (m)
-                    </label>
-
-                    <input
-                        type="number"
-                        id="newWidth"
-                        min="0"
-                        step="0.1"
-                    >
-
-                    <small
-                        id="widthLimit"
-                        class="dimension-limit"
-                    >
-                        Maximum: 2.6 m
-                    </small>
-
-                </div>
-
+                <div class="form-group"><label for="newLength">Length (m)</label><input type="number" id="newLength" step="0.1" value="12.0"></div>
+                <div class="form-group"><label for="newWidth">Width (m)</label><input type="number" id="newWidth" step="0.1" value="2.5"></div>
+                <div class="form-group"><label for="newHeight">Height (m)</label><input type="number" id="newHeight" step="0.1" value="3.8"></div>
             </div>
-
-
-            <div class="form-group">
-
-                <label for="newHeight">
-                    Height (m)
-                </label>
-
-                <input
-                    type="number"
-                    id="newHeight"
-                    min="0"
-                    step="0.1"
-                >
-
-                <small
-                    id="heightLimit"
-                    class="dimension-limit"
-                >
-                    Maximum: 4.3 m
-                </small>
-
-            </div>
-
-
-            <!-- ===============================
-                 OPERATION
-            =============================== -->
 
             <h3>Operation</h3>
-
-
-            <div class="form-group">
-
-                <label for="newOdometer">
-                    Odometer (km)
-                </label>
-
-                <input
-                    type="number"
-                    id="newOdometer"
-                    min="0"
-                    step="1"
-                >
-
+            <div class="form-row">
+                <div class="form-group"><label for="newOdometer">Odometer (km)</label><input type="number" id="newOdometer" value="45000"></div>
+                <div class="form-group">
+                    <label for="newStatus">Status</label>
+                    <select id="newStatus">
+                        <option value="active">Active</option>
+                        <option value="in_maintenance">Maintenance</option>
+                        <option value="out_of_service">Out of Service</option>
+                    </select>
+                </div>
             </div>
-
-
-            <div class="form-group">
-
-                <label for="newStatus">
-                    Status
-                </label>
-
-                <select id="newStatus">
-
-                    <option value="active">
-                        Active
-                    </option>
-
-                    <option value="inactive">
-                        Inactive
-                    </option>
-
-                    <option value="maintenance">
-                        Maintenance
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label for="newLastService">
-                    Last Service Date
-                </label>
-
-                <input
-                    type="date"
-                    id="newLastService"
-                >
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label for="newNextService">
-                    Next Service Due (km)
-                </label>
-
-                <input
-                    type="number"
-                    id="newNextService"
-                    min="0"
-                    step="1"
-                >
-
-            </div>
-
-
-            <!-- ===============================
-                 BUTTONS
-            =============================== -->
 
             <div class="modal-buttons">
+                <button type="button" id="cancelProfileButton" class="secondary-button">Cancel</button>
+                <button type="button" id="saveProfileButton" class="primary-button">Save Profile</button>
+            </div>
+        </div>
+    </div>
 
-                <button
-                    type="button"
-                    id="cancelProfileButton"
-                    class="secondary-button"
-                >
-                    Cancel
-                </button>
-
-
-                <button
-                    type="button"
-                    id="saveProfileButton"
-                    class="primary-button"
-                >
-                    Save Profile
-                </button>
-
+    <!-- CREATE DRIVER MODAL -->
+    <div id="driverModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Driver Profile</h2>
+                <button type="button" id="closeDriverModalButton" class="close-button">×</button>
             </div>
 
-        </div>
+            <div class="form-group">
+                <label for="newDriverNameInput">Driver Full Name *</label>
+                <input type="text" id="newDriverNameInput" placeholder="e.g. Sipho Ndlovu" required>
+            </div>
 
+            <div class="form-group">
+                <label for="newDriverLicenceInput">Licence Number *</label>
+                <input type="text" id="newDriverLicenceInput" placeholder="e.g. LIC-987654" required>
+            </div>
+
+            <div class="form-group">
+                <label for="newDriverPhoneInput">Contact Phone *</label>
+                <input type="tel" id="newDriverPhoneInput" placeholder="e.g. +27 82 123 4567" required>
+            </div>
+
+            <div class="form-group">
+                <label for="newDriverHoursInput">Driving Hours Available</label>
+                <input type="number" id="newDriverHoursInput" min="0" max="24" step="0.5" value="9.0">
+            </div>
+
+            <div class="modal-buttons">
+                <button type="button" id="cancelDriverButton" class="secondary-button">Cancel</button>
+                <button type="button" id="saveDriverButton" class="primary-button">Save Driver</button>
+            </div>
+        </div>
     </div>
 
-    <!-- =============================== -->
-    <!-- NOTIFICATION POPUP -->
-    <!-- =============================== -->
+    <!-- LEAFLET SCRIPT -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <div
-        id="notificationPopup"
-        class="notification-popup"
-        role="alert"
-        aria-live="polite"
-    >
-
-        <div class="notification-icon">
-            🔔
-        </div>
-
-        <div class="notification-content">
-
-            <strong id="notificationTitle">
-                Notification
-            </strong>
-
-            <p id="notificationMessage">
-                Notification message
-            </p>
-
-        </div>
-
-        <button
-            type="button"
-            id="notificationClose"
-            class="notification-close"
-            aria-label="Close notification"
-        >
-            ×
-        </button>
-
-    </div>
-
-    <!-- ===============================
-         LEAFLET
-    =============================== -->
-
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""
-    ></script>
-
-
-    <!-- ===============================
-         APPLICATION JAVASCRIPT
-    =============================== -->
-
-    <script src="js/app.js"></script>
-
-
+    <!-- INTEGRATED APPLICATION LOGIC -->
     <script>
-    // ===============================
-    // SELECTED TRUCK MAP CARD
-    // ===============================
+        // ===============================
+        // MAP INITIALIZATION
+        // ===============================
+        const map = L.map("map").setView([-33.9249, 18.4241], 10);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
 
-        function displaySelectedTruckCard(profile) {
+        let previewRouteLayers = [];
+        let previewMarkers = [];
+        let routeResults = [];
 
-            const card =
-                document.getElementById(
-                    "selectedTruckCard"
-                );
+        // Global Simulation Mission Store
+        const simulationMissions = new Map(); // key: missionId -> { socket, marker, polyline, playBtn, truck, driver, tripIncidents, liveScore, initialScore }
+        let missionCounter = 0;
+        let highlightedMissionId = null;
 
+        let truckProfiles = [];
+        let selectedProfile = null;
 
-            if (!card) {
-                return;
-            }
+        let driverProfiles = [];
+        let selectedDriver = null;
 
+        // UI References
+        const statusEl = document.getElementById("status");
+        const routeInfo = document.getElementById("routeInfo");
+        const truckProfileSelect = document.getElementById("truckProfile");
+        const driverProfileSelect = document.getElementById("driverProfile");
+        const routeButton = document.getElementById("routeButton");
 
-            if (!profile) {
-
-                card.style.display = "none";
-
-                return;
-            }
-
-
-            // ===============================
-            // IDENTIFICATION
-            // ===============================
-
-            document.getElementById(
-                "selectedTruckName"
-            ).textContent =
-                profile.name || "--";
-
-
-            document.getElementById(
-                "selectedTruckRegistration"
-            ).textContent =
-                profile.registration || "--";
-
-
-            document.getElementById(
-                "selectedTruckFleetNumber"
-            ).textContent =
-                profile.fleetNumber || "--";
-
-
-            document.getElementById(
-                "selectedTruckVin"
-            ).textContent =
-                profile.vin || "--";
-
-
-            document.getElementById(
-                "selectedTruckVehicle"
-            ).textContent =
-                `${profile.make || ""} ${profile.model || ""}`.trim() || "--";
-
-
-            // ===============================
-            // SHOW CARD
-            // ===============================
-
-            card.style.display = "flex";
+        function setStatus(message, isSuccess = false) {
+            statusEl.textContent = message;
+            statusEl.classList.toggle("success", Boolean(isSuccess));
         }
 
-
         // ===============================
-        // UPDATE ROUTE INFORMATION
+        // LOAD PROFILES & DRIVERS
         // ===============================
-
-        function updateTruckRouteInformation(route) {
-
-            if (!route) {
-                return;
-            }
-
-
-            // ===============================
-            // TRAVEL TIME
-            // ===============================
-
-            const totalMinutes =
-                Math.round(
-                    route.duration / 60
-                );
-
-
-            const hours =
-                Math.floor(
-                    totalMinutes / 60
-                );
-
-
-            const minutes =
-                totalMinutes % 60;
-
-
-            let travelTime;
-
-
-            if (hours > 0) {
-
-                travelTime =
-                    `${hours} hr ${minutes} min`;
-
-            } else {
-
-                travelTime =
-                    `${minutes} min`;
-
-            }
-
-
-            document.getElementById(
-                "selectedTruckTravelTime"
-            ).textContent =
-                travelTime;
-
-
-            // ===============================
-            // ETA
-            // ===============================
-
-            const arrival =
-                new Date(
-                    Date.now() +
-                    route.duration * 1000
-                );
-
-
-            const eta =
-                arrival.toLocaleTimeString(
-                    [],
-                    {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                    }
-                );
-
-
-            document.getElementById(
-                "selectedTruckEta"
-            ).textContent =
-                eta;
-
-
-            // ===============================
-            // AVERAGE SPEED
-            // ===============================
-
-            const distanceKm =
-                route.distance / 1000;
-
-
-            const durationHours =
-                route.duration / 3600;
-
-
-            const averageSpeed =
-                distanceKm /
-                durationHours;
-
-
-            document.getElementById(
-                "selectedTruckSpeed"
-            ).textContent =
-                `${averageSpeed.toFixed(0)} km/h`;
-        }
-
-
-        // ===============================
-        // PROFILE SELECTION
-        // ===============================
-
-        document
-            .getElementById("truckProfile")
-            .addEventListener(
-                "change",
-                function () {
-
-                    const profileId =
-                        this.value;
-
-
-                    if (!profileId) {
-
-                        displaySelectedTruckCard(
-                            null
-                        );
-
-                        return;
-                    }
-
-
-                    const profile =
-                        truckProfiles.find(
-                            truck =>
-                                String(truck.id) ===
-                                String(profileId)
-                        );
-
-
-                    if (profile) {
-
-                        displaySelectedTruckCard(
-                            profile
-                        );
-
-                    }
-
+        async function loadTruckProfiles() {
+            try {
+                const response = await fetch("http://127.0.0.1:8000/trucks/");
+                if (response.ok) {
+                    truckProfiles = await response.json();
                 }
-            );
-
-
-        // ===============================
-        // ROUTE INFORMATION
-        // ===============================
-
-        function updateSelectedTruckRoute(route) {
-
-            if (!route) {
-                return;
+            } catch (err) {
+                console.warn("Backend unavailable, using cached truck profiles:", err);
+                const saved = localStorage.getItem("truckProfiles");
+                if (saved) truckProfiles = JSON.parse(saved);
             }
 
-
-            updateTruckRouteInformation(
-                route
-            );
+            truckProfileSelect.innerHTML = `<option value="">-- Select Truck Profile --</option>`;
+            truckProfiles.forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p.id;
+                opt.textContent = `${p.fleet_number || p.name} - ${p.registration}`;
+                truckProfileSelect.appendChild(opt);
+            });
         }
 
-    </script>
-    <script>
-
-        // ===============================
-        // NOTIFICATION SYSTEM
-        // ===============================
-
-        let notificationTimer = null;
-
-
-        function showNotification(
-            title,
-            message,
-            duration = 5000
-        ) {
-
-            const popup =
-                document.getElementById(
-                    "notificationPopup"
-                );
-
-            const titleElement =
-                document.getElementById(
-                    "notificationTitle"
-                );
-
-            const messageElement =
-                document.getElementById(
-                    "notificationMessage"
-                );
-
-
-            // ===============================
-            // SET CONTENT
-            // ===============================
-
-            titleElement.textContent =
-                title;
-
-            messageElement.textContent =
-                message;
-
-
-            // ===============================
-            // SHOW POPUP
-            // ===============================
-
-            popup.classList.add("show");
-
-
-            // ===============================
-            // CLEAR PREVIOUS TIMER
-            // ===============================
-
-            if (notificationTimer) {
-
-                clearTimeout(
-                    notificationTimer
-                );
-
+        async function loadDriverProfiles() {
+            try {
+                const response = await fetch("http://127.0.0.1:8000/drivers/");
+                if (response.ok) {
+                    driverProfiles = await response.json();
+                }
+            } catch (err) {
+                console.warn("Backend unavailable, using cached driver profiles:", err);
+                const saved = localStorage.getItem("driverProfiles");
+                if (saved) driverProfiles = JSON.parse(saved);
             }
 
+            const currentSelectedId = driverProfileSelect.value;
+            
+            driverProfileSelect.innerHTML = `<option value="">-- Select Driver --</option>`;
+            driverProfiles.forEach(d => {
+                const opt = document.createElement("option");
+                opt.value = d.id;
+                const incidentCount = (d.incidents || []).length;
+                const badge = incidentCount > 0 ? ` (${incidentCount} violations)` : " (Clean)";
+                opt.textContent = `${d.name} - ${d.licence}${badge}`;
+                driverProfileSelect.appendChild(opt);
+            });
 
-            // ===============================
-            // AUTO HIDE
-            // ===============================
-
-            notificationTimer =
-                setTimeout(
-                    function () {
-
-                        popup.classList.remove(
-                            "show"
-                        );
-
-                    },
-                    duration
-                );
+            if (currentSelectedId) {
+                driverProfileSelect.value = currentSelectedId;
+            }
         }
 
-
         // ===============================
-        // CLOSE BUTTON
+        // AI PRE-TRIP EVALUATION CALCULATOR
         // ===============================
-
-        document
-            .getElementById("notificationClose")
-            .addEventListener(
-                "click",
-                function () {
-
-                    const popup =
-                        document.getElementById(
-                            "notificationPopup"
-                        );
-
-                    popup.classList.remove(
-                        "show"
-                    );
-
-
-                    if (notificationTimer) {
-
-                        clearTimeout(
-                            notificationTimer
-                        );
-
-                    }
-
-                }
-            );
-
-
-        // ===============================
-        // HOVER BEHAVIOUR
-        // ===============================
-
-        const notificationPopup =
-            document.getElementById(
-                "notificationPopup"
-            );
-
-
-        notificationPopup.addEventListener(
-            "mouseenter",
-            function () {
-
-                if (notificationTimer) {
-
-                    clearTimeout(
-                        notificationTimer
-                    );
-
-                }
-
-            }
-        );
-
-
-        notificationPopup.addEventListener(
-            "mouseleave",
-            function () {
-
-                notificationTimer =
-                    setTimeout(
-                        function () {
-
-                            notificationPopup
-                                .classList
-                                .remove("show");
-
-                        },
-                        2000
-                    );
-
-            }
-        );
-
-    </script>
-    <script>
-
-// ===============================
-// EASYFLEET AI ASSISTANT
-// ===============================
-
-const aiAssistantButton =
-    document.getElementById("aiAssistantButton");
-
-const aiAssistantWindow =
-    document.getElementById("aiAssistantWindow");
-
-const aiAssistantClose =
-    document.getElementById("aiAssistantClose");
-
-const aiAssistantInput =
-    document.getElementById("aiAssistantInput");
-
-const aiAssistantSend =
-    document.getElementById("aiAssistantSend");
-
-const aiAssistantMessages =
-    document.getElementById("aiAssistantMessages");
-
-
-// ===============================
-// OPEN ASSISTANT
-// ===============================
-
-aiAssistantButton.addEventListener(
-    "click",
-    function () {
-
-        aiAssistantWindow.style.display = "flex";
-
-        aiAssistantInput.focus();
-
-    }
-);
-
-
-// ===============================
-// CLOSE ASSISTANT
-// ===============================
-
-aiAssistantClose.addEventListener(
-    "click",
-    function () {
-
-        aiAssistantWindow.style.display = "none";
-
-    }
-);
-
-
-// ===============================
-// ADD MESSAGE
-// ===============================
-
-function addAiMessage(
-    message,
-    type
-) {
-
-    const messageElement =
-        document.createElement("div");
-
-    messageElement.className =
-        "ai-message " +
-        (
-            type === "user"
-                ? "ai-message-user"
-                : "ai-message-bot"
-        );
-
-    messageElement.textContent =
-        message;
-
-    aiAssistantMessages.appendChild(
-        messageElement
-    );
-
-    aiAssistantMessages.scrollTop =
-        aiAssistantMessages.scrollHeight;
-
-    return messageElement;
-
-}
-
-
-// ===============================
-// SEND QUERY
-// ===============================
-
-async function sendAiQuery() {
-
-    const query =
-        aiAssistantInput.value.trim();
-
-
-    if (!query) {
-
-        return;
-
-    }
-
-
-    // Display user message
-
-    addAiMessage(
-        query,
-        "user"
-    );
-
-
-    aiAssistantInput.value = "";
-
-
-    // Loading message
-
-    const loadingMessage =
-        addAiMessage(
-            "EasyFleet AI is thinking...",
-            "bot"
-        );
-
-    loadingMessage.classList.add(
-        "ai-message-loading"
-    );
-
-
-    aiAssistantSend.disabled = true;
-
-    aiAssistantInput.disabled = true;
-
-
-    try {
-
-        const response =
-            await fetch(
-                "http://127.0.0.1:8000/ai/assistant",
-                {
+        async function evaluatePreTripScore(driver, truck) {
+            const scorePill = document.getElementById("driverPreTripScore");
+            const ratingEl = document.getElementById("driverPreTripRating");
+            const assessEl = document.getElementById("driverPreTripAssessment");
+
+            try {
+                const res = await fetch("http://127.0.0.1:8000/ai/driver/pre-trip-score", {
                     method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ driver: driver, truck: truck })
+                });
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-                            query: query
-                        })
+                if (res.ok) {
+                    const data = await res.json();
+                    scorePill.textContent = `${data.score} / 100`;
+                    scorePill.className = `score-pill ${data.score < 65 ? 'danger' : data.score < 85 ? 'warning' : ''}`;
+                    ratingEl.textContent = data.rating;
+                    ratingEl.style.color = data.score < 65 ? '#ef4444' : data.score < 85 ? '#f59e0b' : '#059669';
+                    assessEl.textContent = data.assessment;
+                    driver.preTripScore = data.score;
+                    return;
                 }
-            );
+            } catch (err) {
+                console.warn("Backend pre-trip scoring fallback:", err);
+            }
 
+            // Local fallback calculator
+            let score = 100;
+            const incList = driver.incidents || [];
+            score -= (incList.length * 6);
+            if ((driver.driving_hours || 9) < 5) score -= 12;
+            score = Math.max(25, Math.min(100, score));
 
-        if (!response.ok) {
-
-            throw new Error(
-                "The AI assistant could not be reached."
-            );
-
+            scorePill.textContent = `${score} / 100`;
+            scorePill.className = `score-pill ${score < 65 ? 'danger' : score < 85 ? 'warning' : ''}`;
+            ratingEl.textContent = score >= 85 ? "Low Risk (Optimal)" : score >= 65 ? "Moderate Risk" : "High Risk";
+            ratingEl.style.color = score < 65 ? '#ef4444' : score < 85 ? '#f59e0b' : '#059669';
+            assessEl.textContent = score >= 85 ? "Driver exhibits strong historical safety compliance." : "Driver shows past infractions; live telemetry monitoring recommended.";
+            driver.preTripScore = score;
         }
 
+        // ===============================
+        // DISPLAY PROFILES IN SIDEBAR
+        // ===============================
+        truckProfileSelect.addEventListener("change", function() {
+            const id = this.value;
+            if (!id) {
+                selectedProfile = null;
+                document.getElementById("truckInfoPanel").style.display = "none";
+                return;
+            }
 
-        const data =
-            await response.json();
+            selectedProfile = truckProfiles.find(t => String(t.id) === String(id));
+            if (!selectedProfile) return;
 
+            document.getElementById("truckInfoPanel").style.display = "block";
+            document.getElementById("truckName").textContent = selectedProfile.name || "--";
+            document.getElementById("truckFleetNumber").textContent = selectedProfile.fleet_number || "--";
+            document.getElementById("truckVin").textContent = selectedProfile.vin || "--";
+            document.getElementById("registration").textContent = selectedProfile.registration || "--";
+            document.getElementById("truckMakeModel").textContent = `${selectedProfile.make || ""} ${selectedProfile.model || ""}`.trim() || "--";
+            document.getElementById("truckYear").textContent = selectedProfile.year || "--";
+            document.getElementById("truckFuelType").textContent = (selectedProfile.fuel_type || "--").toUpperCase();
+            document.getElementById("truckStatus").textContent = (selectedProfile.status || "--").toUpperCase();
+            document.getElementById("truckWeight").textContent = `${Number(selectedProfile.gross_vehicle_weight_kg || selectedProfile.weight || 0).toLocaleString()} kg`;
+            document.getElementById("truckPayload").textContent = `${Number(selectedProfile.payload_capacity_kg || selectedProfile.payload || 0).toLocaleString()} kg`;
+            document.getElementById("truckEnginePower").textContent = `${selectedProfile.engine_power_kw || selectedProfile.engine_power || 0} kW`;
+            document.getElementById("truckFuel").textContent = `${selectedProfile.fuel_tank_capacity_l || selectedProfile.fuel || 0} L`;
+            document.getElementById("truckAxles").textContent = selectedProfile.axle_count || selectedProfile.axles || "--";
+            document.getElementById("truckVehicleType").textContent = (selectedProfile.vehicle_type || "--").replace("_", " ");
+            document.getElementById("truckDimensions").textContent = `${selectedProfile.length_m || selectedProfile.length || 0}m × ${selectedProfile.width_m || 2.5}m × ${selectedProfile.height_m || selectedProfile.height || 0}m`;
+            document.getElementById("truckOdometer").textContent = `${Number(selectedProfile.odometer_km || selectedProfile.odometer || 0).toLocaleString()} km`;
+            document.getElementById("truckNextService").textContent = selectedProfile.next_service_due_km ? `${Number(selectedProfile.next_service_due_km).toLocaleString()} km` : "--";
 
-        loadingMessage.remove();
+            if (selectedDriver) evaluatePreTripScore(selectedDriver, selectedProfile);
+        });
 
+        driverProfileSelect.addEventListener("change", function() {
+            const id = this.value;
+            if (!id) {
+                selectedDriver = null;
+                document.getElementById("driverInfoPanel").style.display = "none";
+                return;
+            }
 
-        addAiMessage(
-            data.response ||
-            "The AI assistant returned no response.",
-            "bot"
-        );
+            selectedDriver = driverProfiles.find(d => String(d.id) === String(id));
+            if (!selectedDriver) return;
 
-    }
+            document.getElementById("driverInfoPanel").style.display = "block";
+            document.getElementById("displayDriverName").textContent = selectedDriver.name || "--";
+            document.getElementById("displayDriverLicence").textContent = selectedDriver.licence || "--";
+            document.getElementById("displayDriverPhone").textContent = selectedDriver.phone || "--";
+            document.getElementById("displayDriverHours").textContent = `${selectedDriver.driving_hours || 9} hrs`;
 
-    catch (error) {
+            // Render Permanent Violations List for this driver
+            const incidentsContainer = document.getElementById("driverIncidentsList");
+            const incList = selectedDriver.incidents || [];
+            if (incList.length === 0) {
+                incidentsContainer.innerHTML = `<span class="clean-record-badge">✓ Clean Driving Record (0 Incidents)</span>`;
+            } else {
+                incidentsContainer.innerHTML = incList.map(inc => `<span class="incident-badge-tag">⚠️ ${inc}</span>`).join(" ");
+            }
 
-        loadingMessage.remove();
+            evaluatePreTripScore(selectedDriver, selectedProfile || {});
+        });
 
-
-        addAiMessage(
-            "Unable to connect to EasyFleet AI. Please make sure the FastAPI backend is running.",
-            "bot"
-        );
-
-
-        console.error(
-            "AI Assistant Error:",
-            error
-        );
-
-    }
-
-    finally {
-
-        aiAssistantSend.disabled = false;
-
-        aiAssistantInput.disabled = false;
-
-        aiAssistantInput.focus();
-
-    }
-
-}
-
-
-// ===============================
-// SEND BUTTON
-// ===============================
-
-aiAssistantSend.addEventListener(
-    "click",
-    sendAiQuery
-);
-
-
-// ===============================
-// ENTER KEY
-// ===============================
-
-aiAssistantInput.addEventListener(
-    "keydown",
-    function (event) {
-
-        if (
-            event.key === "Enter"
-        ) {
-
-            event.preventDefault();
-
-            sendAiQuery();
-
+        // ===============================
+        // NOMINATIM PREDICTIVE SEARCH
+        // ===============================
+        async function searchNominatim(query) {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=za&q=${encodeURIComponent(query)}`;
+            const res = await fetch(url, { headers: { "Accept": "application/json" } });
+            if (!res.ok) return [];
+            return await res.json();
         }
 
-    }
-);
+        function setupAutocomplete(inputId, listId) {
+            const input = document.getElementById(inputId);
+            const list = document.getElementById(listId);
+            let timer = null;
 
-</script>
+            input.addEventListener("input", () => {
+                const q = input.value.trim();
+                clearTimeout(timer);
+                if (q.length < 3) {
+                    list.innerHTML = "";
+                    list.classList.remove("visible");
+                    return;
+                }
+                timer = setTimeout(async () => {
+                    list.innerHTML = `<li class="suggestion-loading">Searching...</li>`;
+                    list.classList.add("visible");
+                    try {
+                        const items = await searchNominatim(q);
+                        list.innerHTML = "";
+                        if (!items.length) {
+                            list.innerHTML = `<li class="suggestion-empty">No locations found</li>`;
+                            return;
+                        }
+                        items.forEach(item => {
+                            const li = document.createElement("li");
+                            li.textContent = item.display_name;
+                            li.addEventListener("click", () => {
+                                input.value = item.display_name;
+                                list.innerHTML = "";
+                                list.classList.remove("visible");
+                            });
+                            list.appendChild(li);
+                        });
+                    } catch (e) {
+                        list.innerHTML = "";
+                        list.classList.remove("visible");
+                    }
+                }, 300);
+            });
+
+            document.addEventListener("click", (e) => {
+                if (e.target !== input) {
+                    list.innerHTML = "";
+                    list.classList.remove("visible");
+                }
+            });
+        }
+
+        setupAutocomplete("start", "start-suggestions");
+        setupAutocomplete("destination", "destination-suggestions");
+
+        // ===============================
+        // MULTI-ROUTE OSRM CALCULATION
+        // ===============================
+        async function geocode(text) {
+            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&format=jsonv2&limit=1&countrycodes=za`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.length) throw new Error(`Could not find location: "${text}"`);
+            return { lat: Number(data[0].lat), lon: Number(data[0].lon), name: data[0].display_name };
+        }
+
+        function formatDuration(seconds) {
+            const mins = Math.round(seconds / 60);
+            const hrs = Math.floor(mins / 60);
+            const remMins = mins % 60;
+            return hrs ? `${hrs} hr ${remMins} min` : `${remMins} min`;
+        }
+
+        function formatEta(seconds) {
+            const d = new Date(Date.now() + seconds * 1000);
+            return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        }
+
+        function clearPreviewRoutes() {
+            previewRouteLayers.forEach(l => map.removeLayer(l));
+            previewRouteLayers = [];
+            previewMarkers.forEach(m => map.removeLayer(m));
+            previewMarkers = [];
+            document.getElementById("routeOptions").innerHTML = "";
+        }
+
+        function displayRouteDetails(idx) {
+            const route = routeResults[idx];
+            const distKm = (route.distance / 1000).toFixed(1);
+            const durationTxt = formatDuration(route.duration);
+            const etaTxt = formatEta(route.duration);
+
+            const truckWeightKg = selectedProfile ? (selectedProfile.gross_vehicle_weight_kg || selectedProfile.weight || 16000) : 16000;
+            const burnRate = 28.0 + (truckWeightKg / 1000) * 0.35;
+            const fuelEst = ((route.distance / 100000) * burnRate).toFixed(1);
+
+            document.getElementById("distance").textContent = `${distKm} km`;
+            document.getElementById("duration").textContent = durationTxt;
+            document.getElementById("eta").textContent = etaTxt;
+            document.getElementById("fuelRequired").textContent = `${fuelEst} L`;
+
+            previewRouteLayers.forEach((layer, lIdx) => {
+                layer.setStyle({
+                    color: lIdx === idx ? "#2563eb" : "#94a3b8",
+                    weight: lIdx === idx ? 6 : 4,
+                    opacity: lIdx === idx ? 0.9 : 0.45,
+                    dashArray: lIdx === idx ? null : "8 8"
+                });
+                if (lIdx === idx) layer.bringToFront();
+            });
+
+            document.querySelectorAll(".route-option").forEach((opt, oIdx) => {
+                opt.classList.toggle("selected", oIdx === idx);
+            });
+        }
+
+        function createRouteOptions() {
+            const container = document.getElementById("routeOptions");
+            container.innerHTML = "";
+
+            routeResults.forEach((r, i) => {
+                const row = document.createElement("div");
+                row.className = "route-option-container";
+
+                const opt = document.createElement("button");
+                opt.type = "button";
+                opt.className = "route-option";
+                opt.textContent = `Route ${i + 1} - ${(r.distance / 1000).toFixed(1)} km (${formatDuration(r.duration)})`;
+                opt.addEventListener("click", () => displayRouteDetails(i));
+
+                const playBtn = document.createElement("button");
+                playBtn.type = "button";
+                playBtn.className = "play-simulation-btn";
+                playBtn.title = "Dispatch / Start Simulation";
+                playBtn.innerHTML = "▶";
+
+                playBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    displayRouteDetails(i);
+                    dispatchTruckMission(r, playBtn);
+                });
+
+                row.appendChild(opt);
+                row.appendChild(playBtn);
+                container.appendChild(row);
+            });
+        }
+
+        routeButton.addEventListener("click", async () => {
+            const startVal = document.getElementById("start").value.trim();
+            const destVal = document.getElementById("destination").value.trim();
+
+            if (!selectedProfile) {
+                alert("Please select a truck profile first.");
+                return;
+            }
+            if (!selectedDriver) {
+                alert("Please select a driver profile first.");
+                return;
+            }
+            if (!startVal || !destVal) {
+                setStatus("Please enter both starting location and destination.");
+                return;
+            }
+
+            routeButton.disabled = true;
+            routeButton.textContent = "Calculating Roads...";
+            setStatus("Fetching road routes...");
+            clearPreviewRoutes();
+            routeInfo.style.display = "none";
+
+            try {
+                const [startCoord, destCoord] = await Promise.all([geocode(startVal), geocode(destVal)]);
+                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoord.lon},${startCoord.lat};${destCoord.lon},${destCoord.lat}?alternatives=true&overview=full&geometries=geojson`;
+
+                const res = await fetch(osrmUrl);
+                const data = await res.json();
+
+                if (data.code !== "Ok" || !data.routes.length) {
+                    throw new Error("No navigable road route found between locations.");
+                }
+
+                routeResults = data.routes.slice(0, 3);
+                previewRouteLayers = routeResults.map(r => L.geoJSON(r.geometry).addTo(map));
+
+                const startMarker = L.marker([startCoord.lat, startCoord.lon]).addTo(map).bindPopup(`<b>Start:</b> ${startCoord.name}`);
+                const destMarker = L.marker([destCoord.lat, destCoord.lon]).addTo(map).bindPopup(`<b>Destination:</b> ${destCoord.name}`);
+                previewMarkers.push(startMarker, destMarker);
+
+                map.fitBounds(L.featureGroup(previewRouteLayers).getBounds(), { padding: [40, 40] });
+
+                createRouteOptions();
+                displayRouteDetails(0);
+                routeInfo.style.display = "block";
+                setStatus(`${routeResults.length} road option${routeResults.length > 1 ? "s" : ""} calculated.`, true);
+
+            } catch (err) {
+                console.error(err);
+                setStatus(err.message || "Failed to calculate road route.");
+            } finally {
+                routeButton.disabled = false;
+                routeButton.textContent = "Calculate Route";
+            }
+        });
+
+        // ===============================
+        // INTERACTIVE ACTIVE MISSIONS HUD WITH TRIP INCIDENTS & SCORES
+        // ===============================
+        function updateActiveMissionsList() {
+            const listEl = document.getElementById("activeMissionsList");
+            const countEl = document.getElementById("activeMissionsCount");
+            countEl.textContent = simulationMissions.size;
+
+            if (simulationMissions.size === 0) {
+                listEl.innerHTML = `<p class="no-missions-text">No active vehicle simulations.</p>`;
+                return;
+            }
+
+            listEl.innerHTML = "";
+            simulationMissions.forEach((mission, mId) => {
+                const card = document.createElement("div");
+                const isSelected = (highlightedMissionId === mId);
+                card.className = `mission-item-card ${isSelected ? 'highlighted' : ''}`;
+                card.style.borderLeftColor = mission.color;
+
+                const emergencyHtml = mission.lastEvent 
+                    ? `<div class="mission-emergency-banner">
+                         <span class="emergency-icon">⚠️</span>
+                         <span>${mission.lastEvent}</span>
+                       </div>`
+                    : ``;
+
+                const liveScoreVal = mission.liveScore || 100;
+                const scoreClass = liveScoreVal < 65 ? 'danger' : liveScoreVal < 85 ? 'warning' : '';
+
+                // Render trip incidents history & post-trip assessment if clicked
+                let tripHistoryHtml = "";
+                if (isSelected) {
+                    const incidents = mission.tripIncidents || [];
+                    const incidentsListHtml = incidents.length === 0
+                        ? `<div class="trip-incidents-title" style="color: #166534;">✓ No incidents on this trip so far</div>`
+                        : `<div class="trip-incidents-title">⚠️ Emergencies on this trip (${incidents.length}):</div>
+                           <ul class="trip-incidents-list">
+                               ${incidents.map(item => `<li>${item}</li>`).join("")}
+                           </ul>`;
+
+                    const postTripHtml = mission.postTripResult ? `
+                        <div class="trip-evaluation-summary">
+                            <div style="font-weight: bold; color: #1e293b;">🏁 AI Post-Trip Score: <span style="color: #2563eb; font-weight: 800;">${mission.postTripResult.final_score} / 100</span></div>
+                            <div style="color: #475569; margin-top: 2px;">${mission.postTripResult.summary}</div>
+                        </div>
+                    ` : ``;
+
+                    tripHistoryHtml = `
+                        <div class="trip-incidents-block">
+                            ${incidentsListHtml}
+                            ${postTripHtml}
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="mission-header-row">
+                        <strong>#${mId} - ${mission.truck.name} (${mission.truck.registration})</strong>
+                        <button type="button" class="mission-cancel-btn" title="Cancel Simulation">✕</button>
+                    </div>
+                    <div class="mission-driver-tag-row">
+                        <span class="mission-driver-tag">Driver: <b>${mission.driver?.name || 'Unassigned'}</b></span>
+                        <span class="mission-live-score ${scoreClass}">AI In-Trip: ${liveScoreVal} / 100</span>
+                    </div>
+                    <div class="mission-stats-row">
+                        <span>Speed: <b id="mission-speed-${mId}">${mission.lastSpeed || 0} km/h</b></span>
+                        <span>Fuel: <b id="mission-fuel-${mId}">${mission.lastFuel || 0} L</b></span>
+                        <span>Temp: <b id="mission-temp-${mId}">${mission.lastTemp || 0}°C</b></span>
+                    </div>
+                    <div id="mission-alert-container-${mId}">
+                        ${emergencyHtml}
+                    </div>
+                    ${tripHistoryHtml}
+                `;
+
+                // Click to highlight and inspect all trip emergencies & scores
+                card.addEventListener("click", (e) => {
+                    if (e.target.classList.contains("mission-cancel-btn")) return;
+                    highlightMission(mId);
+                });
+
+                card.querySelector(".mission-cancel-btn").addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    cancelMission(mId);
+                });
+
+                listEl.appendChild(card);
+            });
+        }
+
+        function highlightMission(mId) {
+            highlightedMissionId = (highlightedMissionId === mId) ? null : mId;
+            updateActiveMissionsList();
+
+            if (!highlightedMissionId || !simulationMissions.has(highlightedMissionId)) return;
+            const mission = simulationMissions.get(highlightedMissionId);
+
+            simulationMissions.forEach((m, otherId) => {
+                if (m.polyline) {
+                    m.polyline.setStyle({
+                        weight: otherId === highlightedMissionId ? 8 : 4,
+                        opacity: otherId === highlightedMissionId ? 1.0 : 0.45
+                    });
+                    if (otherId === highlightedMissionId) m.polyline.bringToFront();
+                }
+            });
+
+            if (mission.marker) {
+                map.panTo(mission.marker.getLatLng(), { animate: true });
+                mission.marker.openPopup();
+            }
+        }
+
+        async function cancelMission(mId) {
+            if (!simulationMissions.has(mId)) return;
+            const mission = simulationMissions.get(mId);
+
+            if (mission.socket) mission.socket.close();
+            if (mission.marker) map.removeLayer(mission.marker);
+            if (mission.polyline) map.removeLayer(mission.polyline);
+            if (mission.playBtn) {
+                mission.playBtn.innerHTML = "▶";
+                mission.playBtn.classList.remove("active");
+                delete mission.playBtn.dataset.missionId;
+            }
+
+            // Calculate AI Post-Trip Score and Persist Incidents
+            try {
+                const res = await fetch("http://127.0.0.1:8000/ai/driver/post-trip-score", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        trip_incidents: mission.tripIncidents || [], 
+                        base_score: mission.initialScore || 100 
+                    })
+                });
+
+                if (res.ok) {
+                    const postEval = await res.json();
+                    mission.postTripResult = postEval;
+                }
+
+                for (const inc of (mission.tripIncidents || [])) {
+                    await fetch(`http://127.0.0.1:8000/drivers/${mission.driver.id}/incidents`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ incident: inc })
+                    });
+                }
+                await loadDriverProfiles();
+            } catch (err) {
+                console.warn("Post-trip scoring sync failed:", err);
+            }
+
+            simulationMissions.delete(mId);
+            if (highlightedMissionId === mId) highlightedMissionId = null;
+            updateActiveMissionsList();
+            setStatus(`Mission #${mId} concluded.`);
+        }
+
+        // ===============================
+        // UNIQUE VEHICLE & DRIVER DISPATCH
+        // ===============================
+        function dispatchTruckMission(route, triggerBtn) {
+            if (triggerBtn.dataset.missionId && simulationMissions.has(Number(triggerBtn.dataset.missionId))) {
+                cancelMission(Number(triggerBtn.dataset.missionId));
+                return;
+            }
+
+            // Enforce Single-Trip Rule per Truck
+            const truckIdToDispatch = selectedProfile.id;
+            for (let [mId, mission] of simulationMissions.entries()) {
+                if (mission.truck.id === truckIdToDispatch) {
+                    alert(`Truck "${selectedProfile.name}" (${selectedProfile.registration}) is currently on Route #${mId}. A vehicle cannot be dispatched on multiple routes at the same time.`);
+                    return;
+                }
+            }
+
+            // Enforce Single-Trip Rule per Driver
+            const driverIdToDispatch = selectedDriver.id;
+            for (let [mId, mission] of simulationMissions.entries()) {
+                if (mission.driver.id === driverIdToDispatch) {
+                    alert(`Driver "${selectedDriver.name}" is currently driving Route #${mId}. A driver cannot be on multiple trips simultaneously.`);
+                    return;
+                }
+            }
+
+            missionCounter++;
+            const missionId = missionCounter;
+            triggerBtn.dataset.missionId = missionId;
+            triggerBtn.innerHTML = "⏹";
+            triggerBtn.classList.add("active");
+
+            const missionColors = ["#2563eb", "#dc2626", "#059669", "#7c3aed", "#d97706", "#0891b2"];
+            const missionColor = missionColors[(missionId - 1) % missionColors.length];
+
+            const activeTrackPolyline = L.geoJSON(route.geometry, {
+                style: {
+                    color: missionColor,
+                    weight: 5,
+                    opacity: 0.85
+                }
+            }).addTo(map);
+
+            const truckIcon = L.divIcon({
+                className: "truck-sim-marker",
+                html: `<div style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">🚛<span style="position: absolute; top: -6px; right: -6px; background: ${missionColor}; color: white; border-radius: 50%; font-size: 10px; padding: 1px 5px; font-weight: bold;">#${missionId}</span></div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+
+            const startCoords = route.geometry.coordinates[0];
+            const marker = L.marker([startCoords[1], startCoords[0]], { icon: truckIcon }).addTo(map);
+
+            const socket = new WebSocket("ws://127.0.0.1:8000/ws/simulate-route");
+            const truckSnapshot = JSON.parse(JSON.stringify(selectedProfile));
+            const driverSnapshot = JSON.parse(JSON.stringify(selectedDriver));
+            const startingScore = selectedDriver.preTripScore || 100;
+
+            simulationMissions.set(missionId, {
+                socket: socket,
+                marker: marker,
+                polyline: activeTrackPolyline,
+                playBtn: triggerBtn,
+                truck: truckSnapshot,
+                driver: driverSnapshot,
+                color: missionColor,
+                initialScore: startingScore,
+                liveScore: startingScore,
+                lastSpeed: 0,
+                lastFuel: truckSnapshot.fuel_tank_capacity_l || 300,
+                lastTemp: 85,
+                tripIncidents: [],
+                lastEvent: null,
+                postTripResult: null
+            });
+
+            updateActiveMissionsList();
+
+            socket.onopen = () => {
+                socket.send(JSON.stringify({
+                    route_id: String(missionId),
+                    coordinates: route.geometry.coordinates,
+                    truck: truckSnapshot,
+                    driver: driverSnapshot
+                }));
+                setStatus(`🚀 Mission #${missionId} dispatched for ${truckSnapshot.name} (Driver: ${driverSnapshot.name} - Pre-Trip AI: ${startingScore}/100)!`, true);
+            };
+
+            socket.onmessage = async (event) => {
+                const tick = JSON.parse(event.data);
+                if (tick.error) return;
+
+                marker.setLatLng([tick.lat, tick.lon]);
+                
+                const eventText = tick.events && tick.events.length > 0 ? tick.events.join(" | ") : null;
+                const mission = simulationMissions.get(missionId);
+
+                if (mission) {
+                    mission.lastSpeed = tick.speed;
+                    mission.lastFuel = tick.fuel;
+                    mission.lastTemp = tick.engine_temp;
+                    mission.lastEvent = eventText;
+
+                    // Deduct Live In-Trip AI Score on Incident Detection
+                    if (eventText && mission.lastRecordedEvent !== eventText) {
+                        mission.lastRecordedEvent = eventText;
+                        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        const fullIncidentStr = `${timestamp} - ${eventText}`;
+                        mission.tripIncidents.push(fullIncidentStr);
+
+                        const deduction = eventText.includes("Overspeeding") ? 10 : eventText.includes("braking") ? 8 : 6;
+                        mission.liveScore = Math.max(15, mission.liveScore - deduction);
+                    } else if (!eventText) {
+                        mission.lastRecordedEvent = null;
+                    }
+
+                    marker.bindPopup(`
+                        <div style="font-size: 12px;">
+                            <strong style="color: ${missionColor}">Mission #${missionId} (${truckSnapshot.name})</strong><br/>
+                            <b>Driver:</b> ${driverSnapshot.name} | <b>Live AI Score:</b> ${mission.liveScore}/100<br/>
+                            <b>Speed:</b> ${tick.speed} km/h | <b>Fuel:</b> ${tick.fuel} L<br/>
+                            <b>Engine Temp:</b> ${tick.engine_temp}°C
+                            ${eventText ? `<br/><b style="color: #b45309;">⚠️ ${eventText}</b>` : ''}
+                        </div>
+                    `);
+
+                    // Update Active Card DOM
+                    const sEl = document.getElementById(`mission-speed-${missionId}`);
+                    const fEl = document.getElementById(`mission-fuel-${missionId}`);
+                    const tEl = document.getElementById(`mission-temp-${missionId}`);
+                    const alertContainer = document.getElementById(`mission-alert-container-${missionId}`);
+
+                    if (sEl) sEl.textContent = `${tick.speed} km/h`;
+                    if (fEl) fEl.textContent = `${tick.fuel} L`;
+                    if (tEl) tEl.textContent = `${tick.engine_temp}°C`;
+
+                    if (alertContainer) {
+                        alertContainer.innerHTML = eventText ? `
+                            <div class="mission-emergency-banner">
+                                <span class="emergency-icon">⚠️</span>
+                                <span>${eventText}</span>
+                            </div>
+                        ` : "";
+                    }
+
+                    updateActiveMissionsList();
+                }
+
+                if (tick.events && tick.events.length > 0) {
+                    setStatus(`⚠️ [Mission #${missionId}] ${tick.events.join(" | ")}`, false);
+                }
+
+                if (tick.is_completed) {
+                    setStatus(`✅ Mission #${missionId} (${truckSnapshot.name}) reached destination! Computing final AI score...`, true);
+                    cancelMission(missionId);
+                }
+            };
+
+            socket.onclose = () => {
+                cancelMission(missionId);
+            };
+        }
+
+        // ===============================
+        // MODALS MANAGEMENT & DATABASE SAVING
+        // ===============================
+        const truckModal = document.getElementById("profileModal");
+        document.getElementById("createProfileButton").addEventListener("click", () => truckModal.style.display = "flex");
+        document.getElementById("closeModalButton").addEventListener("click", () => truckModal.style.display = "none");
+        document.getElementById("cancelProfileButton").addEventListener("click", () => truckModal.style.display = "none");
+
+        document.getElementById("saveProfileButton").addEventListener("click", async () => {
+            const payload = {
+                name: document.getElementById("newTruckName").value.trim(),
+                fleet_number: document.getElementById("newFleetNumber").value.trim(),
+                registration: document.getElementById("newRegistration").value.trim(),
+                vin: document.getElementById("newVin").value.trim(),
+                make: document.getElementById("newMake").value.trim() || "Generic",
+                model: document.getElementById("newModel").value.trim() || "Truck",
+                year: Number(document.getElementById("newYear").value) || 2024,
+                fuel_type: document.getElementById("newFuelType").value || "diesel",
+                gross_vehicle_weight_kg: Number(document.getElementById("newWeight").value) || 0,
+                payload_capacity_kg: Number(document.getElementById("newPayload").value) || 0,
+                engine_power_kw: Number(document.getElementById("newEnginePower").value) || 0,
+                fuel_tank_capacity_l: Number(document.getElementById("newFuel").value) || 0,
+                axle_count: Number(document.getElementById("newAxleCount").value) || 2,
+                vehicle_type: document.getElementById("newVehicleType").value || "single_rigid",
+                length_m: Number(document.getElementById("newLength").value) || 0,
+                width_m: Number(document.getElementById("newWidth").value) || 2.5,
+                height_m: Number(document.getElementById("newHeight").value) || 3.8,
+                odometer_km: Number(document.getElementById("newOdometer").value) || 0,
+                status: document.getElementById("newStatus").value || "active"
+            };
+
+            if (!payload.name || !payload.fleet_number || !payload.registration || !payload.vin) {
+                alert("Please fill in all required truck fields: Truck Name, Fleet Number, Registration, and VIN.");
+                return;
+            }
+
+            try {
+                const res = await fetch("http://127.0.0.1:8000/trucks/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Failed to save truck to database.");
+                }
+
+                const saved = await res.json();
+                truckProfiles.push(saved);
+                localStorage.setItem("truckProfiles", JSON.stringify(truckProfiles));
+                await loadTruckProfiles();
+                
+                truckProfileSelect.value = saved.id;
+                truckProfileSelect.dispatchEvent(new Event("change"));
+                
+                truckModal.style.display = "none";
+                alert(`Truck "${saved.name}" successfully created and saved to database!`);
+            } catch (err) {
+                console.error("Save truck error:", err);
+                alert(`Database Error: ${err.message}`);
+            }
+        });
+
+        // Driver Modal & Save
+        const driverModal = document.getElementById("driverModal");
+        document.getElementById("createDriverButton").addEventListener("click", () => driverModal.style.display = "flex");
+        document.getElementById("closeDriverModalButton").addEventListener("click", () => driverModal.style.display = "none");
+        document.getElementById("cancelDriverButton").addEventListener("click", () => driverModal.style.display = "none");
+
+        document.getElementById("saveDriverButton").addEventListener("click", async () => {
+            const payload = {
+                name: document.getElementById("newDriverNameInput").value.trim(),
+                licence: document.getElementById("newDriverLicenceInput").value.trim(),
+                phone: document.getElementById("newDriverPhoneInput").value.trim(),
+                driving_hours: Number(document.getElementById("newDriverHoursInput").value) || 9.0
+            };
+
+            if (!payload.name || !payload.licence || !payload.phone) {
+                alert("Please fill in all required driver fields: Name, Licence Number, and Contact Phone.");
+                return;
+            }
+
+            try {
+                const res = await fetch("http://127.0.0.1:8000/drivers/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Failed to save driver to database.");
+                }
+
+                const saved = await res.json();
+                driverProfiles.push(saved);
+                localStorage.setItem("driverProfiles", JSON.stringify(driverProfiles));
+                await loadDriverProfiles();
+
+                driverProfileSelect.value = saved.id;
+                driverProfileSelect.dispatchEvent(new Event("change"));
+
+                driverModal.style.display = "none";
+                alert(`Driver "${saved.name}" successfully saved to database!`);
+            } catch (err) {
+                console.error("Save driver error:", err);
+                alert(`Database Error: ${err.message}`);
+            }
+        });
+
+        // ===============================
+        // AI ASSISTANT CHAT
+        // ===============================
+        const aiBtn = document.getElementById("aiAssistantButton");
+        const aiWin = document.getElementById("aiAssistantWindow");
+        const aiClose = document.getElementById("aiAssistantClose");
+        const aiInput = document.getElementById("aiAssistantInput");
+        const aiSend = document.getElementById("aiAssistantSend");
+        const aiMsgBox = document.getElementById("aiAssistantMessages");
+
+        aiBtn.addEventListener("click", () => {
+            aiWin.style.display = aiWin.style.display === "flex" ? "none" : "flex";
+            if (aiWin.style.display === "flex") aiInput.focus();
+        });
+        aiClose.addEventListener("click", () => aiWin.style.display = "none");
+
+        async function sendAi() {
+            const text = aiInput.value.trim();
+            if (!text) return;
+            const uMsg = document.createElement("div");
+            uMsg.className = "ai-message ai-message-user";
+            uMsg.textContent = text;
+            aiMsgBox.appendChild(uMsg);
+            aiInput.value = "";
+
+            const bMsg = document.createElement("div");
+            bMsg.className = "ai-message ai-message-bot";
+            bMsg.textContent = "Analyzing safety metrics...";
+            aiMsgBox.appendChild(bMsg);
+            aiMsgBox.scrollTop = aiMsgBox.scrollHeight;
+
+            try {
+                const res = await fetch("http://127.0.0.1:8000/ai/assistant/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ query: text })
+                });
+                const data = await res.json();
+                bMsg.textContent = data.response || "No response received.";
+            } catch {
+                bMsg.textContent = "AI engine offline.";
+            }
+            aiMsgBox.scrollTop = aiMsgBox.scrollHeight;
+        }
+
+        aiSend.addEventListener("click", sendAi);
+        aiInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendAi(); });
+
+        // Initialize application
+        loadTruckProfiles();
+        loadDriverProfiles();
+    </script>
 </body>
-
 </html>

@@ -76,3 +76,9 @@ The stats regarding the application
     Shipments & Routes: id, shipment_code, driver_id, vehicle_id, origin_coords, destination_coords, current_eta, route_geometry, status.
 
     Alerts & Incidents: id, vehicle_id, driver_id, alert_type (fuel theft anomaly, high-risk zone entry, collision, maintenance warning), severity, resolved_status.
+
+# Running
+
+http://127.0.0.1:8000/frontend/HTML/index.html
+
+uvicorn main:app --app-dir backend --reload

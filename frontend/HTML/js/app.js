@@ -1474,173 +1474,107 @@ function clearProfileForm() {
 
 
 // ===============================
-// CALCULATE ROUTE
+// ROUTE LAYER & CALCULATION
 // ===============================
+
+let routeLayerGroup = L.layerGroup().addTo(map);
 
 document
     .getElementById("routeButton")
-    .addEventListener(
-        "click",
-        calculateRoute
-    );
-
+    .addEventListener("click", calculateRoute);
 
 async function calculateRoute() {
-
-    const start =
-        document
-            .getElementById("start")
-            .value
-            .trim();
-
-
-    const destination =
-        document
-            .getElementById("destination")
-            .value
-            .trim();
-
-
-    const driverName =
-        document
-            .getElementById("driverName")
-            .value
-            .trim();
-
+    const start = document.getElementById("start").value.trim();
+    const destination = document.getElementById("destination").value.trim();
+    const driverName = document.getElementById("driverName").value.trim();
 
     if (!selectedProfile) {
-
-        alert(
-            "Please select a truck profile."
-        );
-
+        alert("Please select a truck profile.");
         return;
-
     }
-
 
     if (!start || !destination) {
-
-        alert(
-            "Please enter a starting location and destination."
-        );
-
+        alert("Please enter a starting location and destination.");
         return;
-
     }
 
-
-    // ===========================
-    // ROUTE REQUEST
-    // ===========================
-
     const routeRequest = {
-
-        start:
-            start,
-
-        destination:
-            destination,
-
+        start: start,
+        destination: destination,
         truck: {
-
-            name:
-                selectedProfile.name,
-
-            fleetNumber:
-                selectedProfile.fleetNumber,
-
-            registration:
-                selectedProfile.registration,
-
-            vin:
-                selectedProfile.vin,
-
-            make:
-                selectedProfile.make,
-
-            model:
-                selectedProfile.model,
-
-            year:
-                selectedProfile.year,
-
-            fuelType:
-                selectedProfile.fuelType,
-
-            grossVehicleWeightKg:
-                selectedProfile.grossVehicleWeightKg,
-
-            payloadCapacityKg:
-                selectedProfile.payloadCapacityKg,
-
-            enginePowerKw:
-                selectedProfile.enginePowerKw,
-
-            fuelTankCapacityL:
-                selectedProfile.fuelTankCapacityL,
-
-            axleCount:
-                selectedProfile.axleCount,
-
-            vehicleType:
-                selectedProfile.vehicleType,
-
-            length:
-                selectedProfile.lengthM,
-
-            width:
-                selectedProfile.widthM,
-
-            height:
-                selectedProfile.heightM,
-
-            odometerKm:
-                selectedProfile.odometerKm,
-
-            status:
-                selectedProfile.status,
-
-            lastServiceDate:
-                selectedProfile.lastServiceDate,
-
-            nextServiceDueKm:
-                selectedProfile.nextServiceDueKm
-
+            name: selectedProfile.name,
+            fleet_number: selectedProfile.fleetNumber,
+            registration: selectedProfile.registration,
+            gross_vehicle_weight_kg: selectedProfile.grossVehicleWeightKg,
+            fuel_tank_capacity_l: selectedProfile.fuelTankCapacityL,
+            vehicle_type: selectedProfile.vehicleType,
+            length_m: selectedProfile.lengthM,
+            width_m: selectedProfile.widthM,
+            height_m: selectedProfile.heightM
         },
-
         driver: {
-
-            name:
-                driverName,
-
-            licence:
-                document
-                    .getElementById("driverLicence")
-                    .value,
-
-            phone:
-                document
-                    .getElementById("driverPhone")
-                    .value,
-
-            drivingHours:
-                Number(
-                    document
-                        .getElementById("driverHours")
-                        .value
-                )
-
+            name: driverName || "Unassigned",
+            licence: document.getElementById("driverLicence").value,
+            phone: document.getElementById("driverPhone").value,
+            driving_hours: Number(document.getElementById("driverHours").value) || 9.0
         }
-
     };
 
+    try {
+        const response = await fetch("http://127.0.0.1:8000/route", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(routeRequest)
+        });
 
-    console.log(
-        "Sending to FastAPI:",
-        routeRequest
-    );
+        if (!response.ok) {
+            throw new Error(`Server returned status ${response.status}`);
+        }
 
+        const routeData = await response.json();
+
+        // Update Information Panels
+        if (document.getElementById("distance")) {
+            document.getElementById("distance").textContent = `${routeData.distance_km} km`;
+        }
+        if (document.getElementById("duration")) {
+            document.getElementById("duration").textContent = routeData.duration_text;
+        }
+        if (document.getElementById("fuelRequired")) {
+            document.getElementById("fuelRequired").textContent = `${routeData.fuel_required_liters} L`;
+        }
+
+        // Draw Route on the Map
+        drawRoute(routeData);
+
+    } catch (err) {
+        console.error("Error calculating route:", err);
+        alert("Failed to calculate route. Make sure your FastAPI backend is running and the /route endpoint exists.");
+    }
+}
+
+function drawRoute(route) {
+    routeLayerGroup.clearLayers();
+
+    // Markers for start and destination
+    const startMarker = L.marker(route.start_coord).bindPopup(`<b>Start:</b> Origin`);
+    const destMarker = L.marker(route.dest_coord).bindPopup(`<b>Destination:</b> Destination`);
+    
+    // Draw route polyline
+    const polyline = L.polyline(route.waypoints, {
+        color: "#2563eb",
+        weight: 6,
+        opacity: 0.85
+    });
+
+    routeLayerGroup.addLayer(startMarker);
+    routeLayerGroup.addLayer(destMarker);
+    routeLayerGroup.addLayer(polyline);
+
+    // Zoom map to fit the route
+    map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
 }
 
 
