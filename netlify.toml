@@ -1,12 +1,7 @@
-cat << 'EOF' > netlify.toml
-[[redirects]]
-  from = "/"
-  to = "/frontend/HTML/index.html"
-  status = 200
-  force = true
+[build]
+  publish = "frontend/HTML"
 
 [[redirects]]
   from = "/*"
-  to = "/frontend/HTML/:splat"
+  to = "/index.html"
   status = 200
-EOF
