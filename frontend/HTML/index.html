@@ -5,558 +5,40 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>EasyFleet | Route Display & Planner</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="css/style.css">
-
-    <style>
-        .location-field {
-            position: relative;
-        }
-
-        .suggestions-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-top: none;
-            max-height: 240px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .suggestions-list.visible {
-            display: block;
-        }
-
-        .suggestions-list li {
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 13px;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .suggestions-list li:hover,
-        .suggestions-list li.active {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-
-        .suggestions-list li strong {
-            color: #2563eb;
-        }
-
-        .suggestions-list li.suggestion-loading,
-        .suggestions-list li.suggestion-empty {
-            color: #888;
-            font-style: italic;
-            cursor: default;
-        }
-
-        #status {
-            min-height: 20px;
-            margin: 10px 0 0;
-            color: #b91c1c;
-            font-size: 13px;
-        }
-
-        #status.success {
-            color: #166534;
-        }
-
-        #routeOptions {
-            display: grid;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .route-option-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            width: 100%;
-            margin-bottom: 6px;
-        }
-
-        .route-option {
-            flex: 1;
-            margin: 0;
-            padding: 10px;
-            color: #1f2937;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 6px;
-            text-align: left;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .route-option:hover,
-        .route-option.selected {
-            color: white;
-            background: #2563eb;
-            border-color: #1d4ed8;
-        }
-
-        .play-simulation-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 38px;
-            height: 38px;
-            min-width: 38px;
-            margin: 0;
-            padding: 0;
-            background: #10b981;
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .play-simulation-btn:hover {
-            background: #059669;
-        }
-
-        .play-simulation-btn.active {
-            background: #ef4444;
-        }
-
-        .truck-sim-marker {
-            font-size: 26px;
-            line-height: 1;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-        }
-
-        /* Sidebar Header & Auto Route Button */
-        .sidebar-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .sidebar-header-row h2 {
-            margin: 0;
-        }
-
-        .auto-route-btn {
-            background: #8b5cf6;
-            color: #ffffff;
-            border: none;
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
-            transition: background 0.2s, transform 0.1s;
-        }
-
-        .auto-route-btn:hover {
-            background: #7c3aed;
-            transform: translateY(-1px);
-        }
-
-        /* AI Driver Pre-Trip Score Card */
-        .ai-driver-score-card {
-            margin-top: 10px;
-            padding: 10px;
-            background: #f8fafc;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .score-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .score-pill {
-            font-size: 15px;
-            font-weight: 800;
-            padding: 3px 10px;
-            border-radius: 16px;
-            color: #ffffff;
-            background: #10b981;
-        }
-
-        .score-pill.warning {
-            background: #f59e0b;
-        }
-
-        .score-pill.danger {
-            background: #ef4444;
-        }
-
-        /* Active Missions List (Top Right) */
-        #activeMissionsPanel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 330px;
-            max-height: calc(100vh - 140px);
-            background: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #e5e7eb;
-        }
-
-        #activeMissionsHeader {
-            background: #1f2937;
-            color: #ffffff;
-            padding: 10px 14px;
-            font-size: 13px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #activeMissionsHeader span.badge {
-            background: #2563eb;
-            color: white;
-            font-size: 11px;
-            padding: 2px 6px;
-            border-radius: 10px;
-        }
-
-        #activeMissionsList {
-            padding: 8px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            max-height: 440px;
-        }
-
-        .mission-item-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-left-width: 5px;
-            border-radius: 6px;
-            padding: 9px 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
-        }
-
-        .mission-item-card:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-            background: #f1f5f9;
-        }
-
-        .mission-item-card.highlighted {
-            background: #eff6ff;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 2px #93c5fd;
-        }
-
-        .mission-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .mission-header-row strong {
-            color: #0f172a;
-            font-size: 12px;
-        }
-
-        .mission-cancel-btn {
-            background: transparent;
-            border: none;
-            color: #ef4444;
-            font-weight: bold;
-            cursor: pointer;
-            padding: 0 4px;
-            font-size: 14px;
-            border-radius: 3px;
-        }
-
-        .mission-cancel-btn:hover {
-            background: #fee2e2;
-        }
-
-        .mission-driver-tag-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 1px 0;
-        }
-
-        .mission-driver-tag {
-            color: #64748b;
-            font-size: 11px;
-        }
-
-        .mission-live-score {
-            font-weight: 700;
-            font-size: 11px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: white;
-            background: #10b981;
-        }
-
-        .mission-live-score.warning {
-            background: #f59e0b;
-        }
-
-        .mission-live-score.danger {
-            background: #ef4444;
-        }
-
-        .mission-stats-row {
-            display: flex;
-            justify-content: space-between;
-            color: #475569;
-            font-size: 11px;
-        }
-
-        .mission-emergency-banner {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #fefce8;
-            border: 1px solid #fef08a;
-            color: #854d0e;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-top: 3px;
-            animation: pulse-warning 1.8s infinite;
-        }
-
-        .emergency-icon {
-            font-size: 13px;
-            color: #ca8a04;
-        }
-
-        @keyframes pulse-warning {
-            0%, 100% { background-color: #fefce8; border-color: #fef08a; }
-            50% { background-color: #fef3c7; border-color: #fde047; }
-        }
-
-        /* Detailed Emergency & Evaluation Block in Active Card */
-        .trip-incidents-block {
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px dashed #cbd5e1;
-            font-size: 11px;
-        }
-
-        .trip-incidents-title {
-            font-weight: bold;
-            color: #991b1b;
-            margin-bottom: 3px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .trip-incidents-list {
-            list-style: disc;
-            margin: 0;
-            padding-left: 16px;
-            color: #b45309;
-        }
-
-        .trip-evaluation-summary {
-            margin-top: 6px;
-            padding: 6px 8px;
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            font-size: 11px;
-        }
-
-        /* Driver History Violations Panel */
-        .driver-incidents-container {
-            margin-top: 8px;
-            padding: 8px;
-            background: #f8fafc;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .incident-badge-tag {
-            display: inline-block;
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            margin: 2px;
-            font-weight: 500;
-        }
-
-        .clean-record-badge {
-            display: inline-block;
-            background: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        .no-missions-text {
-            color: #94a3b8;
-            font-size: 12px;
-            text-align: center;
-            padding: 12px 0;
-            margin: 0;
-        }
-
-        /* AI Assistant */
-        #aiAssistant {
-            position: fixed !important;
-            bottom: 24px !important;
-            right: 24px !important;
-            left: auto !important;
-            top: auto !important;
-            z-index: 99999 !important;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        #aiAssistantButton {
-            border-radius: 24px;
-            padding: 10px 18px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: background 0.2s;
-        }
-
-        #aiAssistantButton:hover {
-            background: #1d4ed8;
-        }
-
-        #aiAssistantWindow {
-            display: none;
-            position: absolute !important;
-            bottom: 50px !important;
-            right: 0 !important;
-            left: auto !important;
-            top: auto !important;
-            width: 340px;
-            height: 430px;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid #d1d5db;
-            margin-bottom: 8px;
-        }
-
-        #aiAssistantHeader {
-            background: #1f2937;
-            color: white;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-        }
-
-        #aiAssistantMessages {
-            flex: 1;
-            padding: 12px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            font-size: 13px;
-        }
-
-        .ai-message {
-            padding: 8px 12px;
-            border-radius: 8px;
-            max-width: 85%;
-            line-height: 1.4;
-        }
-
-        .ai-message-bot {
-            background: #f1f5f9;
-            color: #1e293b;
-            align-self: flex-start;
-        }
-
-        .ai-message-user {
-            background: #2563eb;
-            color: white;
-            align-self: flex-end;
-        }
-
-        #aiAssistantInputArea {
-            display: flex;
-            padding: 8px;
-            border-top: 1px solid #e2e8f0;
-            gap: 6px;
-            background: #ffffff;
-        }
-
-        #aiAssistantInputArea input {
-            flex: 1;
-            padding: 8px 10px;
-            font-size: 13px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-        }
-
-        #aiAssistantInputArea button {
-            width: auto;
-            margin: 0;
-            padding: 8px 14px;
-        }
-    </style>
 </head>
 
 <body>
+    <!-- HEADER BAR -->
     <header>
-        <h1>EasyFleet</h1>
+        <div class="header-brand">
+            <button type="button" id="drawerToggleBtn" class="drawer-toggle-btn" aria-label="Toggle navigation drawer" aria-expanded="false" aria-controls="mainSidebar">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+            <h1>EasyFleet <span class="brand-badge">Planner</span></h1>
+        </div>
+        <div class="header-actions">
+            <!-- Mobile indicator / actions if needed -->
+        </div>
     </header>
 
     <div class="application">
-        <aside class="sidebar">
+        <!-- BACKDROP FOR MOBILE DRAWER -->
+        <div id="drawerBackdrop" class="drawer-backdrop" aria-hidden="true"></div>
+
+        <!-- SIDEBAR / MOBILE DRAWER -->
+        <aside class="sidebar" id="mainSidebar" role="region" aria-label="Route Planning and Fleet Configuration">
+            <!-- Mobile Drawer Header -->
+            <div class="drawer-header">
+                <div class="drawer-header-title">
+                    <span>🧭 Plan & Fleet Control</span>
+                </div>
+                <button type="button" id="drawerCloseBtn" class="drawer-close-btn" aria-label="Close navigation drawer">✕</button>
+            </div>
+
             <div class="sidebar-header-row">
                 <h2>Plan Route</h2>
                 <button type="button" id="autoRouteMakerBtn" class="auto-route-btn" title="Auto-pair all available trucks and drivers on random routes">
@@ -633,7 +115,7 @@
                 </div>
 
                 <div class="driver-incidents-container">
-                    <div style="font-weight: bold; margin-bottom: 4px; color: #1e293b;">Previous Trip Mistakes / Record:</div>
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #1e293b; font-size: 12px;">Previous Trip Mistakes / Record:</div>
                     <div id="driverIncidentsList">
                         <span class="clean-record-badge">✓ Clean Driving Record</span>
                     </div>
@@ -662,19 +144,19 @@
             <!-- ROUTE RESULTS -->
             <section id="routeInfo" class="panel route-info" style="display: none;">
                 <h3>Route Information</h3>
-                <p><span>Distance:</span> <strong id="distance">--</strong></p>
-                <p><span>Estimated Time:</span> <strong id="duration">--</strong></p>
-                <p><span>Estimated Arrival:</span> <strong id="eta">--</strong></p>
-                <p><span>Fuel Required:</span> <strong id="fuelRequired">--</strong></p>
+                <div class="info-row"><span>Distance:</span> <strong id="distance">--</strong></div>
+                <div class="info-row"><span>Estimated Time:</span> <strong id="duration">--</strong></div>
+                <div class="info-row"><span>Estimated Arrival:</span> <strong id="eta">--</strong></div>
+                <div class="info-row"><span>Fuel Required:</span> <strong id="fuelRequired">--</strong></div>
                 <div id="routeOptions" aria-label="Available routes"></div>
             </section>
         </aside>
 
         <!-- MAP CONTAINER -->
-        <main id="map" aria-label="Route map" style="position: relative;">
-            <!-- ACTIVE FLEET SIMULATIONS LIST HUD (TOP RIGHT) -->
+        <main id="map" aria-label="Route map">
+            <!-- ACTIVE FLEET SIMULATIONS LIST HUD (TOP RIGHT / RESPONSIVE) -->
             <div id="activeMissionsPanel">
-                <div id="activeMissionsHeader">
+                <div id="activeMissionsHeader" role="button" aria-expanded="true" title="Click to minimize/expand simulations list">
                     <span>Active Routes & Simulations</span>
                     <span id="activeMissionsCount" class="badge">0</span>
                 </div>
@@ -690,7 +172,7 @@
         <div id="aiAssistantWindow">
             <div id="aiAssistantHeader">
                 <div><strong>EasyFleet AI</strong></div>
-                <button type="button" id="aiAssistantClose" style="background: transparent; border: none; color: white; font-size: 18px; cursor: pointer;">×</button>
+                <button type="button" id="aiAssistantClose" aria-label="Close AI chat">×</button>
             </div>
             <div id="aiAssistantMessages">
                 <div class="ai-message ai-message-bot">Hello! I am your EasyFleet Assistant. How can I help you today?</div>
@@ -701,17 +183,17 @@
             </div>
         </div>
 
-        <button type="button" id="aiAssistantButton">
+        <button type="button" id="aiAssistantButton" aria-label="Open AI Assistant">
             🤖 AI Assistant
         </button>
     </div>
 
     <!-- CREATE TRUCK MODAL -->
-    <div id="profileModal" class="modal">
+    <div id="profileModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTruckTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Create Truck Profile</h2>
-                <button type="button" id="closeModalButton" class="close-button">×</button>
+                <h2 id="modalTruckTitle">Create Truck Profile</h2>
+                <button type="button" id="closeModalButton" class="close-button" aria-label="Close modal">×</button>
             </div>
 
             <h3>Truck Identification</h3>
@@ -787,11 +269,11 @@
     </div>
 
     <!-- CREATE DRIVER MODAL -->
-    <div id="driverModal" class="modal">
+    <div id="driverModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalDriverTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Add Driver Profile</h2>
-                <button type="button" id="closeDriverModalButton" class="close-button">×</button>
+                <h2 id="modalDriverTitle">Add Driver Profile</h2>
+                <button type="button" id="closeDriverModalButton" class="close-button" aria-label="Close modal">×</button>
             </div>
 
             <div class="form-group">
@@ -826,7 +308,74 @@
 
     <!-- INTEGRATED APPLICATION LOGIC -->
     <script>
-        // Dynamic Host & WebSocket Detection
+        // ===============================
+        // DRAWER NAVIGATION MANAGEMENT
+        // ===============================
+        const drawerToggleBtn = document.getElementById("drawerToggleBtn");
+        const drawerCloseBtn = document.getElementById("drawerCloseBtn");
+        const drawerBackdrop = document.getElementById("drawerBackdrop");
+        const mainSidebar = document.getElementById("mainSidebar");
+
+        function openDrawer() {
+            if (mainSidebar) mainSidebar.classList.add("open");
+            if (drawerBackdrop) drawerBackdrop.classList.add("active");
+            if (drawerToggleBtn) drawerToggleBtn.setAttribute("aria-expanded", "true");
+            setTimeout(() => { if (typeof map !== 'undefined') map.invalidateSize(); }, 300);
+        }
+
+        function closeDrawer() {
+            if (mainSidebar) mainSidebar.classList.remove("open");
+            if (drawerBackdrop) drawerBackdrop.classList.remove("active");
+            if (drawerToggleBtn) drawerToggleBtn.setAttribute("aria-expanded", "false");
+            setTimeout(() => { if (typeof map !== 'undefined') map.invalidateSize(); }, 300);
+        }
+
+        if (drawerToggleBtn) {
+            drawerToggleBtn.addEventListener("click", () => {
+                if (mainSidebar && mainSidebar.classList.contains("open")) {
+                    closeDrawer();
+                } else {
+                    openDrawer();
+                }
+            });
+        }
+
+        if (drawerCloseBtn) drawerCloseBtn.addEventListener("click", closeDrawer);
+        if (drawerBackdrop) drawerBackdrop.addEventListener("click", closeDrawer);
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                closeDrawer();
+                if (aiWin && aiWin.style.display === "flex") aiWin.style.display = "none";
+                if (truckModal && truckModal.style.display === "flex") truckModal.style.display = "none";
+                if (driverModal && driverModal.style.display === "flex") driverModal.style.display = "none";
+            }
+        });
+
+        // Window resize invalidate map size
+        window.addEventListener("resize", () => {
+            if (typeof map !== 'undefined') map.invalidateSize();
+            if (window.innerWidth >= 1024) {
+                closeDrawer();
+            }
+        });
+
+        // Collapsible Active Missions Panel on Mobile
+        const activeMissionsHeader = document.getElementById("activeMissionsHeader");
+        const activeMissionsList = document.getElementById("activeMissionsList");
+        if (activeMissionsHeader && activeMissionsList) {
+            activeMissionsHeader.addEventListener("click", () => {
+                if (window.innerWidth < 768) {
+                    const isHidden = activeMissionsList.style.display === "none";
+                    activeMissionsList.style.display = isHidden ? "flex" : "none";
+                    activeMissionsHeader.setAttribute("aria-expanded", isHidden ? "true" : "false");
+                }
+            });
+        }
+
+        // ===============================
+        // DYNAMIC HOST & WEBSOCKET DETECTION
+        // ===============================
         const isHosted = window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost';
         const API_BASE = isHosted ? window.location.origin : 'http://127.0.0.1:8000';
         const WS_BASE = isHosted 
@@ -1206,12 +755,14 @@
                 playBtn.type = "button";
                 playBtn.className = "play-simulation-btn";
                 playBtn.title = "Dispatch / Start Simulation";
+                playBtn.setAttribute("aria-label", `Start simulation on Route ${i + 1}`);
                 playBtn.innerHTML = "▶";
 
                 playBtn.addEventListener("click", (e) => {
                     e.stopPropagation();
                     displayRouteDetails(i);
                     dispatchTruckMission(r, playBtn, selectedProfile, selectedDriver);
+                    if (window.innerWidth < 1024) closeDrawer();
                 });
 
                 row.appendChild(opt);
@@ -1267,6 +818,11 @@
                 displayRouteDetails(0);
                 routeInfo.style.display = "block";
                 setStatus(`${routeResults.length} road option${routeResults.length > 1 ? "s" : ""} calculated.`, true);
+
+                if (window.innerWidth < 1024) {
+                    // Smoothly close drawer so user can immediately view map
+                    closeDrawer();
+                }
 
             } catch (err) {
                 console.error(err);
@@ -1331,6 +887,7 @@
 
             autoRouteMakerBtn.disabled = false;
             setStatus(`🚀 Dispatched ${dispatchedCount} automated fleet route${dispatchedCount > 1 ? 's' : ''} successfully!`, true);
+            if (window.innerWidth < 1024) closeDrawer();
         });
 
         // ===============================
@@ -1391,7 +948,7 @@
                 card.innerHTML = `
                     <div class="mission-header-row">
                         <strong>#${mId} - ${mission.truck.name} (${mission.truck.registration})</strong>
-                        <button type="button" class="mission-cancel-btn" title="Cancel Simulation">✕</button>
+                        <button type="button" class="mission-cancel-btn" title="Cancel Simulation" aria-label="Cancel simulation #${mId}">✕</button>
                     </div>
                     <div class="mission-driver-tag-row">
                         <span class="mission-driver-tag">Driver: <b>${mission.driver?.name || 'Unassigned'}</b></span>

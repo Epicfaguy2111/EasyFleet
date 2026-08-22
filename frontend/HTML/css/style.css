@@ -1,295 +1,584 @@
-/* =============================== */
-/* GLOBAL */
-/* =============================== */
+/* ==========================================================================
+   EasyFleet - Mobile-First Responsive Stylesheet
+   ========================================================================== */
 
-* {
+/* --------------------------------------------------------------------------
+   1. CSS Custom Properties / Variables
+   -------------------------------------------------------------------------- */
+:root {
+    /* Colors */
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
+    --color-primary-light: #eff6ff;
+    --color-primary-border: #bfdbfe;
+    --color-secondary: #f1f5f9;
+    --color-secondary-hover: #e2e8f0;
+    --color-success: #10b981;
+    --color-success-hover: #059669;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-purple: #8b5cf6;
+    --color-purple-hover: #7c3aed;
+
+    /* Neutrals */
+    --color-bg-app: #f8fafc;
+    --color-bg-surface: #ffffff;
+    --color-bg-sidebar: #ffffff;
+    --color-header: #111827;
+    --color-text-main: #0f172a;
+    --color-text-muted: #64748b;
+    --color-text-light: #94a3b8;
+    --color-border: #e2e8f0;
+    --color-border-dark: #cbd5e1;
+
+    /* Sizing & Touch Targets */
+    --touch-target-min: 48px;
+    --header-height: 60px;
+    --sidebar-width-desktop: 400px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-full: 9999px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 35px -5px rgba(0, 0, 0, 0.25);
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. Reset & Global Box Sizing
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
-    margin: 0;
-
-    font-family:
-        Arial,
-        sans-serif;
-
-    background: #f3f4f6;
-
-    color: #1f2937;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--color-bg-app);
+    color: var(--color-text-main);
+    line-height: 1.5;
+    overflow-x: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
 }
 
-
-/* =============================== */
-/* HEADER */
-/* =============================== */
-
+/* --------------------------------------------------------------------------
+   3. Header & Navigation Bar
+   -------------------------------------------------------------------------- */
 header {
-    height: 60px;
-
-    background: #1f2937;
-
-    color: white;
-
+    height: var(--header-height);
+    background-color: var(--color-header);
+    color: #ffffff;
     display: flex;
-
     align-items: center;
-
-    padding: 0 20px;
+    justify-content: space-between;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 1100;
+    box-shadow: var(--shadow-md);
 }
 
-header h1 {
-    margin: 0;
-
-    font-size: 22px;
-}
-
-
-/* =============================== */
-/* APPLICATION */
-/* =============================== */
-
-.application {
+.header-brand {
     display: flex;
-
-    height: calc(100vh - 60px);
+    align-items: center;
+    gap: 12px;
 }
 
+.header-brand h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
-/* =============================== */
-/* SIDEBAR */
-/* =============================== */
+.header-brand .brand-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: var(--color-primary);
+    color: white;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
 
+/* Hamburger / Drawer Toggle Button (Min 48px) */
+.drawer-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.drawer-toggle-btn:hover,
+.drawer-toggle-btn:focus-visible {
+    background-color: rgba(255, 255, 255, 0.12);
+    outline: none;
+}
+
+.drawer-toggle-btn svg {
+    width: 26px;
+    height: 26px;
+    fill: currentColor;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   4. Application Structure (Mobile-First: Single Column / Overlay Drawer)
+   -------------------------------------------------------------------------- */
+.application {
+    position: relative;
+    width: 100vw;
+    height: calc(100vh - var(--header-height));
+    height: calc(100dvh - var(--header-height));
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Backdrop Overlay for Mobile Drawer */
+.drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 1200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-normal);
+}
+
+.drawer-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* --------------------------------------------------------------------------
+   5. Sidebar / Navigation Drawer (Mobile-First: Slide-over Drawer)
+   -------------------------------------------------------------------------- */
 .sidebar {
-    width: 380px;
-
-    padding: 20px;
-
-    background: #f3f4f6;
-
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(88vw, 380px);
+    height: 100%;
+    background-color: var(--color-bg-sidebar);
+    z-index: 1300;
+    transform: translateX(-100%);
+    transition: transform var(--transition-normal);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: var(--shadow-xl);
 }
 
+.sidebar.open {
+    transform: translateX(0);
+}
 
-/* =============================== */
-/* PANELS */
-/* =============================== */
+/* Mobile Drawer Header with Close Button */
+.drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 4px;
+}
 
+.drawer-header-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.drawer-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 24px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.drawer-close-btn:hover,
+.drawer-close-btn:focus-visible {
+    background-color: var(--color-secondary);
+    color: var(--color-text-main);
+    outline: none;
+}
+
+/* Sidebar Action Header Row */
+.sidebar-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.sidebar-header-row h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+}
+
+/* --------------------------------------------------------------------------
+   6. Touch-Friendly Interactive Buttons (Minimum 48px)
+   -------------------------------------------------------------------------- */
+button {
+    font-family: inherit;
+    font-size: 1rem;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Primary Button (Min 48px) */
+.primary-button {
+    width: 100%;
+    min-height: var(--touch-target-min);
+    padding: 12px 18px;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.primary-button:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+/* Secondary Button (Min 48px) */
+.secondary-button {
+    width: 100%;
+    min-height: var(--touch-target-min);
+    padding: 12px 18px;
+    background-color: var(--color-secondary);
+    color: var(--color-text-main);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid var(--color-border);
+}
+
+.secondary-button:hover:not(:disabled) {
+    background-color: var(--color-secondary-hover);
+}
+
+/* Auto Route Button (Min 48px) */
+.auto-route-btn {
+    min-height: var(--touch-target-min);
+    padding: 10px 16px;
+    background-color: var(--color-purple);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+}
+
+.auto-route-btn:hover:not(:disabled) {
+    background-color: var(--color-purple-hover);
+}
+
+/* Close & Icon Buttons (Min 48px) */
+.close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 26px;
+    line-height: 1;
+    border-radius: var(--radius-sm);
+}
+
+.close-button:hover {
+    color: var(--color-text-main);
+    background-color: var(--color-secondary);
+}
+
+/* Play Simulation Button (Min 48px) */
+.play-simulation-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
+    background-color: var(--color-success);
+    color: #ffffff;
+    font-size: 1.1rem;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.25);
+}
+
+.play-simulation-btn:hover {
+    background-color: var(--color-success-hover);
+}
+
+.play-simulation-btn.active {
+    background-color: var(--color-danger);
+}
+
+/* Route Option Card Button (Min 48px) */
+.route-option-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.route-option {
+    flex: 1;
+    min-height: var(--touch-target-min);
+    padding: 12px 14px;
+    background-color: var(--color-primary-light);
+    border: 1px solid var(--color-primary-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-main);
+    text-align: left;
+    font-size: 0.9rem;
+    font-weight: 500;
+    justify-content: flex-start;
+}
+
+.route-option:hover,
+.route-option.selected {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary-hover);
+    color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   7. Panels & Cards
+   -------------------------------------------------------------------------- */
 .panel {
-    background: white;
-
-    padding: 15px;
-
-    margin-bottom: 15px;
-
-    border-radius: 8px;
-
-    box-shadow:
-        0 1px 3px
-        rgba(0, 0, 0, 0.1);
+    background-color: var(--color-bg-surface);
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
 }
 
 .panel h3 {
-    margin-top: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--color-text-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-
-/* =============================== */
-/* FORM */
-/* =============================== */
-
+/* --------------------------------------------------------------------------
+   8. Form Controls & Touch Inputs (Min 48px, 16px Font)
+   -------------------------------------------------------------------------- */
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 14px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
 }
 
 .form-group label {
     display: block;
-
-    margin-bottom: 5px;
-
-    font-weight: bold;
-
-    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
     width: 100%;
-
-    padding: 10px;
-
-    border:
-        1px solid #ccc;
-
-    border-radius: 5px;
-
-    font-size: 14px;
-
-    background: white;
-
+    min-height: var(--touch-target-min);
+    padding: 10px 14px;
+    font-size: 1rem; /* 16px prevents mobile safari auto-zoom */
     font-family: inherit;
+    color: var(--color-text-main);
+    background-color: #ffffff;
+    border: 1.5px solid var(--color-border-dark);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    -webkit-appearance: none;
+    appearance: none;
 }
 
-.form-group textarea {
-    resize: vertical;
-
-    min-height: 80px;
+.form-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 18px;
+    padding-right: 40px;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-
-    border-color: #2563eb;
-
-    box-shadow:
-        0 0 0 2px
-        rgba(37, 99, 235, 0.15);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
 }
 
-
-/* =============================== */
-/* REQUIRED FIELDS */
-/* =============================== */
-
-.form-group input:required:invalid,
-.form-group select:required:invalid {
-    border-color: #ccc;
-}
-
-.form-group input:focus:invalid,
-.form-group select:focus:invalid {
-    border-color: #dc2626;
-}
-
-
-/* =============================== */
-/* FIELD HELP */
-/* =============================== */
-
-.field-help {
-    display: block;
-
-    margin-top: 4px;
-
-    font-size: 12px;
-
-    color: #6b7280;
-}
-
-
-/* =============================== */
-/* LEGAL LIMIT BOX */
-/* =============================== */
-
-.legal-limit-box {
-    background: #eff6ff;
-
-    border:
-        1px solid #bfdbfe;
-
-    border-radius: 6px;
-
-    padding: 10px 12px;
-
-    margin-bottom: 15px;
-
-    color: #1e40af;
-}
-
-.legal-limit-box strong {
-    display: block;
-
-    margin-bottom: 4px;
-}
-
-.legal-limit-box p {
-    margin: 0;
-
-    font-size: 13px;
-}
-
-
-/* =============================== */
-/* TWO COLUMN FORM */
-/* =============================== */
-
+/* Mobile-First: Form Row Stacks as Single Column */
 .form-row {
     display: flex;
-
-    gap: 10px;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 14px;
 }
 
 .form-row .form-group {
+    margin-bottom: 0;
     flex: 1;
 }
 
+/* --------------------------------------------------------------------------
+   9. Predictive Location Autocomplete Suggestions (Min 48px Items)
+   -------------------------------------------------------------------------- */
+.location-field {
+    position: relative;
+}
 
-/* =============================== */
-/* BUTTONS */
-/* =============================== */
+.suggestions-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 1050;
+    display: none;
+    box-shadow: var(--shadow-lg);
+}
 
-button {
-    border: none;
+.suggestions-list.visible {
+    display: block;
+}
 
-    border-radius: 5px;
-
-    padding: 10px 14px;
-
-    font-size: 14px;
-
+.suggestions-list li {
+    min-height: var(--touch-target-min);
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
     cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--color-text-main);
+    border-bottom: 1px solid var(--color-border);
 }
 
-button:disabled {
-    opacity: 0.6;
-
-    cursor: not-allowed;
+.suggestions-list li:last-child {
+    border-bottom: none;
 }
 
-.primary-button {
-    width: 100%;
-
-    background: #2563eb;
-
-    color: white;
-
-    font-weight: bold;
+.suggestions-list li:hover,
+.suggestions-list li.active,
+.suggestions-list li:active {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
 }
 
-.primary-button:hover {
-    background: #1d4ed8;
+.suggestions-list li.suggestion-loading,
+.suggestions-list li.suggestion-empty {
+    color: var(--color-text-muted);
+    font-style: italic;
+    cursor: default;
+    justify-content: center;
 }
 
-.secondary-button {
-    width: 100%;
-
-    background: #e5e7eb;
-
-    color: #1f2937;
-}
-
-.secondary-button:hover {
-    background: #d1d5db;
-}
-
-
-/* =============================== */
-/* TRUCK INFORMATION */
-/* =============================== */
-
+/* --------------------------------------------------------------------------
+   10. Info Rows & AI Driver Assessment
+   -------------------------------------------------------------------------- */
 .info-row {
     display: flex;
-
     justify-content: space-between;
-
-    gap: 10px;
-
-    padding: 7px 0;
-
-    border-bottom:
-        1px solid #eee;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.875rem;
 }
 
 .info-row:last-child {
@@ -297,630 +586,594 @@ button:disabled {
 }
 
 .info-row span {
-    color: #6b7280;
-
+    color: var(--color-text-muted);
     flex-shrink: 0;
 }
 
 .info-row strong {
     text-align: right;
-
+    color: var(--color-text-main);
     word-break: break-word;
 }
 
+/* AI Driver Pre-Trip Score Card */
+.ai-driver-score-card {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+}
 
-/* =============================== */
-/* ROUTE INFORMATION */
-/* =============================== */
-
-.route-info p {
+.score-row {
     display: flex;
-
     justify-content: space-between;
-
-    margin: 8px 0;
+    align-items: center;
+    margin-bottom: 6px;
 }
 
-.route-info span {
-    font-weight: bold;
+.score-pill {
+    font-size: 0.9rem;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    color: #ffffff;
+    background-color: var(--color-success);
 }
 
+.score-pill.warning {
+    background-color: var(--color-warning);
+}
 
-/* =============================== */
-/* MAP */
-/* =============================== */
+.score-pill.danger {
+    background-color: var(--color-danger);
+}
 
+.driver-incidents-container {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8fafc;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+}
+
+.incident-badge-tag {
+    display: inline-block;
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    margin: 2px;
+    font-weight: 500;
+}
+
+.clean-record-badge {
+    display: inline-block;
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* Status Alert */
+#status {
+    min-height: 24px;
+    margin-top: 12px;
+    color: var(--color-danger);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+#status.success {
+    color: var(--color-success-hover);
+}
+
+#routeOptions {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   11. Map Container & Live Telemetry HUD
+   -------------------------------------------------------------------------- */
 #map {
     flex: 1;
-
+    width: 100%;
     height: 100%;
+    background-color: #e5e7eb;
+    position: relative;
+    z-index: 1;
 }
 
-
-/* =============================== */
-/* MODAL */
-/* =============================== */
-
-.modal {
-    display: none;
-
-    position: fixed;
-
-    inset: 0;
-
-    background:
-        rgba(0, 0, 0, 0.5);
-
-    justify-content: center;
-
-    align-items: center;
-
-    z-index: 1000;
-
-    padding: 20px;
-}
-
-.modal-content {
-    width: 600px;
-
-    max-width: 95%;
-
-    max-height: 90vh;
-
-    overflow-y: auto;
-
-    background: white;
-
-    border-radius: 10px;
-
-    padding: 25px;
-
-    box-shadow:
-        0 10px 30px
-        rgba(0, 0, 0, 0.25);
-}
-
-.modal-content h3 {
-    margin-top: 25px;
-
-    margin-bottom: 15px;
-
-    padding-bottom: 8px;
-
-    border-bottom:
-        1px solid #e5e7eb;
-
-    color: #1f2937;
-}
-
-.modal-content h3:first-of-type {
-    margin-top: 10px;
-}
-
-
-/* =============================== */
-/* MODAL HEADER */
-/* =============================== */
-
-.modal-header {
-    display: flex;
-
-    justify-content: space-between;
-
-    align-items: center;
-
-    margin-bottom: 10px;
-}
-
-.modal-header h2 {
-    margin: 0;
-
-    color: #111827;
-}
-
-
-/* =============================== */
-/* CLOSE BUTTON */
-/* =============================== */
-
-.close-button {
-    background: transparent;
-
-    font-size: 28px;
-
-    padding: 0;
-
-    color: #555;
-
-    width: auto;
-
+.truck-sim-marker {
+    font-size: 26px;
     line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-.close-button:hover {
-    color: #111827;
-}
-
-
-/* =============================== */
-/* MODAL BUTTONS */
-/* =============================== */
-
-.modal-buttons {
-    display: flex;
-
-    gap: 10px;
-
-    margin-top: 25px;
-
-    padding-top: 15px;
-
-    border-top:
-        1px solid #e5e7eb;
-}
-
-.modal-buttons button {
-    flex: 1;
-}
-
-
-/* =============================== */
-/* RESPONSIVE */
-/* =============================== */
-
-@media (max-width: 900px) {
-
-    .application {
-        flex-direction: column;
-
-        height: auto;
-    }
-
-
-    .sidebar {
-        width: 100%;
-
-        max-height: none;
-    }
-
-
-    #map {
-        height: 500px;
-
-        min-height: 500px;
-    }
-
-}
-
-
-@media (max-width: 600px) {
-
-    .form-row {
-        flex-direction: column;
-
-        gap: 0;
-    }
-
-
-    .modal {
-        padding: 10px;
-    }
-
-
-    .modal-content {
-        padding: 18px;
-
-        max-width: 100%;
-
-        max-height: 95vh;
-    }
-
-
-    .modal-buttons {
-        flex-direction: column;
-    }
-
-
-
-}
-
-/* =============================== */
-/* SELECTED TRUCK CARD */
-/* =============================== */
-
-.selected-truck-card {
+/* Active Missions HUD (Mobile-First: Responsive Floating Panel) */
+#activeMissionsPanel {
     position: absolute;
-
-    right: 25px;
-    bottom: 25px;
-
-    width: 380px;
-
-    background: white;
-
-    border-radius: 12px;
-
-    box-shadow:
-        0 4px 18px rgba(0, 0, 0, 0.25);
-
-    overflow: hidden;
-
+    top: 12px;
+    right: 12px;
+    width: min(340px, calc(100vw - 24px));
+    max-height: calc(100vh - 120px);
+    max-height: calc(100dvh - 120px);
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
     z-index: 1000;
-
+    overflow: hidden;
     display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-border);
 }
 
+#activeMissionsHeader {
+    background: var(--color-header);
+    color: #ffffff;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
 
-/* =============================== */
-/* TRUCK IMAGE */
-/* =============================== */
+#activeMissionsHeader span.badge {
+    background: var(--color-primary);
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+}
 
-.truck-card-image {
-    width: 120px;
-    min-width: 120px;
+#activeMissionsList {
+    padding: 10px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 380px;
+}
 
-    background: #f3f4f6;
+.mission-item-card {
+    background: #f8fafc;
+    border: 1px solid var(--color-border);
+    border-left-width: 5px;
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
 
+.mission-item-card:hover,
+.mission-item-card:active {
+    background: #f1f5f9;
+}
+
+.mission-item-card.highlighted {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-border);
+}
+
+.mission-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+}
+
+.mission-header-row strong {
+    color: var(--color-text-main);
+    font-size: 0.85rem;
+}
+
+.mission-cancel-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-
-    padding: 10px;
+    min-width: 44px;
+    min-height: 44px;
+    background: transparent;
+    border: none;
+    color: var(--color-danger);
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: var(--radius-sm);
 }
 
-
-.truck-card-image img {
-    width: 100px;
-    height: 100px;
-
-    object-fit: contain;
+.mission-cancel-btn:hover,
+.mission-cancel-btn:active {
+    background: #fee2e2;
 }
 
-
-/* =============================== */
-/* CARD CONTENT */
-/* =============================== */
-
-.truck-card-content {
-    padding: 14px;
-
-    flex: 1;
-}
-
-
-.truck-card-content h3 {
-    margin: 0 0 10px 0;
-
-    font-size: 18px;
-
-    color: #111827;
-}
-
-
-/* =============================== */
-/* IDENTIFICATION */
-/* =============================== */
-
-.truck-identification {
-    display: grid;
-
-    grid-template-columns: 1fr 1fr;
-
-    gap: 8px;
-
-    margin-bottom: 12px;
-}
-
-
-.truck-identification div,
-.truck-route-info div {
+.mission-driver-tag-row {
     display: flex;
-
-    flex-direction: column;
-
-    gap: 2px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
 }
 
-
-.truck-identification span,
-.truck-route-info span {
-    font-size: 11px;
-
-    color: #6b7280;
+.mission-driver-tag {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
 }
 
-
-.truck-identification strong,
-.truck-route-info strong {
-    font-size: 13px;
-
-    color: #111827;
+.mission-live-score {
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    color: white;
+    background: var(--color-success);
 }
 
-
-/* =============================== */
-/* ROUTE INFORMATION */
-/* =============================== */
-
-.truck-route-info {
-    border-top: 1px solid #e5e7eb;
-
-    padding-top: 10px;
-
-    display: grid;
-
-    grid-template-columns:
-        1fr
-        1fr
-        1fr;
-
-    gap: 8px;
+.mission-live-score.warning {
+    background: var(--color-warning);
 }
 
+.mission-live-score.danger {
+    background: var(--color-danger);
+}
 
-.truck-route-info strong {
+.mission-stats-row {
+    display: flex;
+    justify-content: space-between;
+    color: #475569;
+    font-size: 0.75rem;
+}
+
+.mission-emergency-banner {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fefce8;
+    border: 1px solid #fef08a;
+    color: #854d0e;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 4px;
+    animation: pulse-warning 1.8s infinite;
+}
+
+.emergency-icon {
     font-size: 14px;
-
-    color: #2563eb;
+    color: #ca8a04;
 }
 
-
-/* =============================== */
-/* MOBILE */
-/* =============================== */
-
-@media (max-width: 700px) {
-
-    .selected-truck-card {
-
-        left: 15px;
-        right: 15px;
-
-        bottom: 15px;
-
-        width: auto;
-
-    }
-
+@keyframes pulse-warning {
+    0%, 100% { background-color: #fefce8; border-color: #fef08a; }
+    50% { background-color: #fef3c7; border-color: #fde047; }
 }
 
-/* =============================== */
-/* AI ASSISTANT */
-/* =============================== */
+.trip-incidents-block {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--color-border-dark);
+    font-size: 0.75rem;
+}
 
+.trip-incidents-title {
+    font-weight: bold;
+    color: #991b1b;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.trip-incidents-list {
+    list-style: disc;
+    margin: 0;
+    padding-left: 16px;
+    color: #b45309;
+}
+
+.trip-evaluation-summary {
+    margin-top: 6px;
+    padding: 6px 8px;
+    background: #ffffff;
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+}
+
+.no-missions-text {
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 16px 0;
+}
+
+/* --------------------------------------------------------------------------
+   12. AI Assistant Floating Widget (Mobile-First)
+   -------------------------------------------------------------------------- */
 #aiAssistant {
-    position: absolute;
-    left: 20px;
-    bottom: 20px;
-    z-index: 1000;
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
 }
-
-
-/* =============================== */
-/* AI BUTTON */
-/* =============================== */
 
 #aiAssistantButton {
+    min-height: var(--touch-target-min);
+    border-radius: var(--radius-full);
+    padding: 12px 20px;
+    background-color: var(--color-primary);
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: var(--shadow-lg);
     display: flex;
     align-items: center;
     gap: 8px;
-
-    padding: 12px 16px;
-
-    border: none;
-    border-radius: 8px;
-
-    background: #2563eb;
-    color: white;
-
-    font-size: 14px;
-    font-weight: bold;
-
-    cursor: pointer;
-
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-
-    transition:
-        background 0.2s,
-        transform 0.2s;
 }
 
 #aiAssistantButton:hover {
-    background: #1d4ed8;
-    transform: translateY(-2px);
+    background-color: var(--color-primary-hover);
 }
-
-
-/* =============================== */
-/* AI WINDOW */
-/* =============================== */
 
 #aiAssistantWindow {
-    position: absolute;
-
-    left: 0;
-    bottom: 55px;
-
-    width: 360px;
-    height: 480px;
-
-    background: white;
-
-    border-radius: 12px;
-
-    box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.25);
-
-    overflow: hidden;
-
     display: none;
-
+    position: absolute;
+    bottom: calc(var(--touch-target-min) + 12px);
+    right: 0;
+    width: min(350px, calc(100vw - 32px));
+    height: min(440px, calc(100vh - 120px));
+    height: min(440px, calc(100dvh - 120px));
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
     flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
 }
-
-
-/* =============================== */
-/* HEADER */
-/* =============================== */
 
 #aiAssistantHeader {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 14px 16px;
-
-    background: #2563eb;
+    background: var(--color-header);
     color: white;
+    min-height: 48px;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
 }
-
-#aiAssistantHeader strong {
-    display: block;
-    font-size: 16px;
-}
-
-#aiAssistantHeader small {
-    display: block;
-    margin-top: 2px;
-
-    font-size: 11px;
-    opacity: 0.85;
-}
-
 
 #aiAssistantClose {
-    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
     background: transparent;
-
+    border: none;
     color: white;
-
-    font-size: 24px;
-
+    font-size: 22px;
     cursor: pointer;
-
-    line-height: 1;
 }
-
-
-/* =============================== */
-/* MESSAGE AREA */
-/* =============================== */
 
 #aiAssistantMessages {
     flex: 1;
-
-    padding: 15px;
-
+    padding: 14px;
     overflow-y: auto;
-
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 0.875rem;
     background: #f8fafc;
 }
 
-
-/* =============================== */
-/* MESSAGES */
-/* =============================== */
-
 .ai-message {
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
     max-width: 85%;
-
-    margin-bottom: 10px;
-
-    padding: 10px 12px;
-
-    border-radius: 10px;
-
-    font-size: 13px;
-
     line-height: 1.4;
 }
 
 .ai-message-bot {
-    margin-right: auto;
-
-    background: white;
-
-    border: 1px solid #e2e8f0;
-
-    color: #1f2937;
+    background: #ffffff;
+    color: #1e293b;
+    border: 1px solid var(--color-border);
+    align-self: flex-start;
 }
 
 .ai-message-user {
-    margin-left: auto;
-
-    background: #2563eb;
-
+    background: var(--color-primary);
     color: white;
+    align-self: flex-end;
 }
-
-
-/* =============================== */
-/* INPUT AREA */
-/* =============================== */
 
 #aiAssistantInputArea {
     display: flex;
-
+    padding: 10px;
+    border-top: 1px solid var(--color-border);
     gap: 8px;
-
-    padding: 10px;
-
-    border-top: 1px solid #e5e7eb;
-
-    background: white;
+    background: #ffffff;
+    align-items: center;
 }
 
-
-#aiAssistantInput {
+#aiAssistantInputArea input {
     flex: 1;
-
-    min-width: 0;
-
-    padding: 10px;
-
-    border: 1px solid #d1d5db;
-
-    border-radius: 6px;
-
-    outline: none;
-
-    font-size: 13px;
+    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    border: 1.5px solid var(--color-border-dark);
+    border-radius: var(--radius-md);
 }
 
-
-#aiAssistantInput:focus {
-    border-color: #2563eb;
+#aiAssistantInputArea button {
+    min-height: 44px;
+    padding: 8px 16px;
+    width: auto;
 }
 
-
-#aiAssistantSend {
-    padding: 10px 14px;
-
-    border: none;
-
-    border-radius: 6px;
-
-    background: #2563eb;
-
-    color: white;
-
-    font-weight: bold;
-
-    cursor: pointer;
+/* --------------------------------------------------------------------------
+   13. Modals & Forms (Mobile-First: Single-Column, Touch-Friendly)
+   -------------------------------------------------------------------------- */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(3px);
+    justify-content: center;
+    align-items: center;
+    z-index: 1400;
+    padding: 12px;
 }
 
-
-#aiAssistantSend:hover {
-    background: #1d4ed8;
+.modal-content {
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    max-height: 90dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-xl);
+    display: flex;
+    flex-direction: column;
 }
 
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-border);
+}
 
-/* =============================== */
-/* LOADING MESSAGE */
-/* =============================== */
+.modal-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+}
 
-.ai-message-loading {
-    color: #64748b;
+.modal-content h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 18px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-main);
+}
 
-    font-style: italic;
+.modal-content h3:first-of-type {
+    margin-top: 4px;
+}
+
+.modal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+}
+
+.modal-buttons button {
+    width: 100%;
+    min-height: var(--touch-target-min);
+}
+
+/* --------------------------------------------------------------------------
+   14. Media Queries: Progressive Enhancement for Larger Screens
+   -------------------------------------------------------------------------- */
+
+/* Tablet (min-width: 640px) */
+@media (min-width: 640px) {
+    .form-row {
+        flex-direction: row;
+    }
+
+    .modal-buttons {
+        flex-direction: row;
+    }
+
+    .modal-buttons button {
+        flex: 1;
+    }
+}
+
+/* Desktop Breakpoint (min-width: 1024px) */
+@media (min-width: 1024px) {
+    /* Hide Hamburger on Desktop */
+    .drawer-toggle-btn {
+        display: none;
+    }
+
+    /* Layout becomes Side-by-Side Flex */
+    .application {
+        flex-direction: row;
+    }
+
+    /* Sidebar is a permanent column */
+    .sidebar {
+        position: relative;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        transform: none;
+        width: var(--sidebar-width-desktop);
+        min-width: var(--sidebar-width-desktop);
+        height: 100%;
+        box-shadow: var(--shadow-md);
+        border-right: 1px solid var(--color-border);
+        padding: 20px;
+    }
+
+    /* Hide drawer header close button on desktop */
+    .drawer-header {
+        display: none;
+    }
+
+    /* Hide backdrop on desktop */
+    .drawer-backdrop {
+        display: none !important;
+    }
+
+    /* Map takes remaining width */
+    #map {
+        height: 100%;
+    }
+
+    #activeMissionsPanel {
+        top: 20px;
+        right: 20px;
+        width: 340px;
+    }
+
+    #aiAssistant {
+        bottom: 24px;
+        right: 24px;
+    }
 }
