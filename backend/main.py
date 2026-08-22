@@ -155,9 +155,9 @@ async def websocket_simulate_route(websocket: WebSocket):
             if random.random() < 0.03:
                 speed = max(25.0, speed - 35.0)
                 events.append("Harsh braking detected")
-            elif speed > 95.0:
+            elif speed > 80.0:
                 events.append(f"Overspeeding warning ({speed:.0f} km/h)")
-            elif random.random() < 0.015:
+            elif random.random() < 0.1:
                 speed = 0.0
                 events.append("Emergency: Flat tyre detected")
             elif engine_temp > 102.0:

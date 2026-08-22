@@ -81,4 +81,10 @@ The stats regarding the application
 
 http://127.0.0.1:8000/frontend/HTML/index.html
 
+source .venv/bin/activate
 uvicorn main:app --app-dir backend --reload
+
+
+# Clearing Databases
+
+rm -f drivers.db easyfleet.db backend/data/drivers.db backend/data/easyfleet.db backend/drivers.db backend/easyfleet.db

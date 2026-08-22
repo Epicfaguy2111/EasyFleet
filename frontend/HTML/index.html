@@ -139,6 +139,39 @@
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
         }
 
+        /* Sidebar Header & Auto Route Button */
+        .sidebar-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-header-row h2 {
+            margin: 0;
+        }
+
+        .auto-route-btn {
+            background: #8b5cf6;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .auto-route-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
         /* AI Driver Pre-Trip Score Card */
         .ai-driver-score-card {
             margin-top: 10px;
@@ -524,7 +557,12 @@
 
     <div class="application">
         <aside class="sidebar">
-            <h2>Plan Route</h2>
+            <div class="sidebar-header-row">
+                <h2>Plan Route</h2>
+                <button type="button" id="autoRouteMakerBtn" class="auto-route-btn" title="Auto-pair all available trucks and drivers on random routes">
+                    ⚡ Auto Route
+                </button>
+            </div>
 
             <!-- TRUCK PROFILE -->
             <section class="panel">
@@ -811,12 +849,23 @@
         let driverProfiles = [];
         let selectedDriver = null;
 
+        // Auto Route City Hubs
+        const AUTO_ROUTE_CITIES = [
+            { name: "Cape Town", lat: -33.9249, lon: 18.4241 },
+            { name: "Johannesburg", lat: -26.2041, lon: 28.0473 },
+            { name: "Durban", lat: -29.8587, lon: 31.0218 },
+            { name: "Port Elizabeth (Gqeberha)", lat: -33.9608, lon: 25.6022 },
+            { name: "Bloemfontein", lat: -29.1167, lon: 26.2167 },
+            { name: "Pretoria", lat: -25.7479, lon: 28.2293 }
+        ];
+
         // UI References
         const statusEl = document.getElementById("status");
         const routeInfo = document.getElementById("routeInfo");
         const truckProfileSelect = document.getElementById("truckProfile");
         const driverProfileSelect = document.getElementById("driverProfile");
         const routeButton = document.getElementById("routeButton");
+        const autoRouteMakerBtn = document.getElementById("autoRouteMakerBtn");
 
         function setStatus(message, isSuccess = false) {
             statusEl.textContent = message;
@@ -899,7 +948,7 @@
                     ratingEl.style.color = data.score < 65 ? '#ef4444' : data.score < 85 ? '#f59e0b' : '#059669';
                     assessEl.textContent = data.assessment;
                     driver.preTripScore = data.score;
-                    return;
+                    return data.score;
                 }
             } catch (err) {
                 console.warn("Backend pre-trip scoring fallback:", err);
@@ -918,6 +967,7 @@
             ratingEl.style.color = score < 65 ? '#ef4444' : score < 85 ? '#f59e0b' : '#059669';
             assessEl.textContent = score >= 85 ? "Driver exhibits strong historical safety compliance." : "Driver shows past infractions; live telemetry monitoring recommended.";
             driver.preTripScore = score;
+            return score;
         }
 
         // ===============================
@@ -1130,7 +1180,7 @@
                 playBtn.addEventListener("click", (e) => {
                     e.stopPropagation();
                     displayRouteDetails(i);
-                    dispatchTruckMission(r, playBtn);
+                    dispatchTruckMission(r, playBtn, selectedProfile, selectedDriver);
                 });
 
                 row.appendChild(opt);
@@ -1194,6 +1244,64 @@
                 routeButton.disabled = false;
                 routeButton.textContent = "Calculate Route";
             }
+        });
+
+        // ===============================
+        // AUTO ROUTE MAKER GENERATOR
+        // ===============================
+        autoRouteMakerBtn.addEventListener("click", async () => {
+            if (!truckProfiles.length || !driverProfiles.length) {
+                alert("Please add at least one truck and one driver profile first.");
+                return;
+            }
+
+            // Identify free trucks and drivers
+            const busyTruckIds = new Set(Array.from(simulationMissions.values()).map(m => m.truck.id));
+            const busyDriverIds = new Set(Array.from(simulationMissions.values()).map(m => m.driver.id));
+
+            const availableTrucks = truckProfiles.filter(t => !busyTruckIds.has(t.id));
+            const availableDrivers = driverProfiles.filter(d => !busyDriverIds.has(d.id));
+
+            if (!availableTrucks.length) {
+                alert("All trucks are currently driving active routes!");
+                return;
+            }
+            if (!availableDrivers.length) {
+                alert("All drivers are currently dispatched on active trips!");
+                return;
+            }
+
+            const pairsCount = Math.min(availableTrucks.length, availableDrivers.length);
+            autoRouteMakerBtn.disabled = true;
+            setStatus(`⚡ Generating ${pairsCount} automated fleet mission${pairsCount > 1 ? 's' : ''}...`);
+
+            let dispatchedCount = 0;
+            for (let i = 0; i < pairsCount; i++) {
+                const truck = availableTrucks[i];
+                const driver = availableDrivers[i];
+
+                // Select two distinct random cities
+                const startCityIdx = Math.floor(Math.random() * AUTO_ROUTE_CITIES.length);
+                let destCityIdx = (startCityIdx + 1 + Math.floor(Math.random() * (AUTO_ROUTE_CITIES.length - 1))) % AUTO_ROUTE_CITIES.length;
+
+                const startCity = AUTO_ROUTE_CITIES[startCityIdx];
+                const destCity = AUTO_ROUTE_CITIES[destCityIdx];
+
+                try {
+                    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${startCity.lon},${startCity.lat};${destCity.lon},${destCity.lat}?overview=full&geometries=geojson`);
+                    const data = await res.json();
+                    if (data.code === "Ok" && data.routes.length > 0) {
+                        const randomRoute = data.routes[0];
+                        dispatchTruckMission(randomRoute, null, truck, driver);
+                        dispatchedCount++;
+                    }
+                } catch (e) {
+                    console.warn(`Failed to auto-route ${truck.name}:`, e);
+                }
+            }
+
+            autoRouteMakerBtn.disabled = false;
+            setStatus(`🚀 Dispatched ${dispatchedCount} automated fleet route${dispatchedCount > 1 ? 's' : ''} successfully!`, true);
         });
 
         // ===============================
@@ -1358,37 +1466,36 @@
         }
 
         // ===============================
-        // UNIQUE VEHICLE & DRIVER DISPATCH
+        // DISPATCH TRUCK MISSION
         // ===============================
-        function dispatchTruckMission(route, triggerBtn) {
-            if (triggerBtn.dataset.missionId && simulationMissions.has(Number(triggerBtn.dataset.missionId))) {
+        function dispatchTruckMission(route, triggerBtn, targetTruck, targetDriver) {
+            const truck = targetTruck || selectedProfile;
+            const driver = targetDriver || selectedDriver;
+
+            if (triggerBtn && triggerBtn.dataset.missionId && simulationMissions.has(Number(triggerBtn.dataset.missionId))) {
                 cancelMission(Number(triggerBtn.dataset.missionId));
                 return;
             }
 
-            // Enforce Single-Trip Rule per Truck
-            const truckIdToDispatch = selectedProfile.id;
-            for (let [mId, mission] of simulationMissions.entries()) {
-                if (mission.truck.id === truckIdToDispatch) {
-                    alert(`Truck "${selectedProfile.name}" (${selectedProfile.registration}) is currently on Route #${mId}. A vehicle cannot be dispatched on multiple routes at the same time.`);
+            for (let [mId, m] of simulationMissions.entries()) {
+                if (m.truck.id === truck.id) {
+                    if (triggerBtn) alert(`Truck "${truck.name}" is already on Route #${mId}.`);
                     return;
                 }
-            }
-
-            // Enforce Single-Trip Rule per Driver
-            const driverIdToDispatch = selectedDriver.id;
-            for (let [mId, mission] of simulationMissions.entries()) {
-                if (mission.driver.id === driverIdToDispatch) {
-                    alert(`Driver "${selectedDriver.name}" is currently driving Route #${mId}. A driver cannot be on multiple trips simultaneously.`);
+                if (m.driver.id === driver.id) {
+                    if (triggerBtn) alert(`Driver "${driver.name}" is already active on Route #${mId}.`);
                     return;
                 }
             }
 
             missionCounter++;
             const missionId = missionCounter;
-            triggerBtn.dataset.missionId = missionId;
-            triggerBtn.innerHTML = "⏹";
-            triggerBtn.classList.add("active");
+
+            if (triggerBtn) {
+                triggerBtn.dataset.missionId = missionId;
+                triggerBtn.innerHTML = "⏹";
+                triggerBtn.classList.add("active");
+            }
 
             const missionColors = ["#2563eb", "#dc2626", "#059669", "#7c3aed", "#d97706", "#0891b2"];
             const missionColor = missionColors[(missionId - 1) % missionColors.length];
@@ -1412,9 +1519,9 @@
             const marker = L.marker([startCoords[1], startCoords[0]], { icon: truckIcon }).addTo(map);
 
             const socket = new WebSocket("ws://127.0.0.1:8000/ws/simulate-route");
-            const truckSnapshot = JSON.parse(JSON.stringify(selectedProfile));
-            const driverSnapshot = JSON.parse(JSON.stringify(selectedDriver));
-            const startingScore = selectedDriver.preTripScore || 100;
+            const truckSnapshot = JSON.parse(JSON.stringify(truck));
+            const driverSnapshot = JSON.parse(JSON.stringify(driver));
+            const startingScore = driver.preTripScore || 100;
 
             simulationMissions.set(missionId, {
                 socket: socket,
@@ -1659,7 +1766,7 @@
 
             const bMsg = document.createElement("div");
             bMsg.className = "ai-message ai-message-bot";
-            bMsg.textContent = "Analyzing safety metrics...";
+            bMsg.textContent = "Analyzing fleet data...";
             aiMsgBox.appendChild(bMsg);
             aiMsgBox.scrollTop = aiMsgBox.scrollHeight;
 
@@ -1672,7 +1779,7 @@
                 const data = await res.json();
                 bMsg.textContent = data.response || "No response received.";
             } catch {
-                bMsg.textContent = "AI engine offline.";
+                bMsg.textContent = "AI backend currently unavailable.";
             }
             aiMsgBox.scrollTop = aiMsgBox.scrollHeight;
         }
